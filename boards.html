@@ -320,6 +320,15 @@
             background: #d0d0d0;
         }
 
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3838;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -386,7 +395,7 @@
     <div id="boardModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <span class="modal-title">Create New Board</span>
+                <span class="modal-title" id="modalTitle">Create New Board</span>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
             <form id="boardForm">
@@ -400,7 +409,8 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Board</button>
+                    <button type="button" class="btn btn-danger" id="deleteBoardBtn" onclick="deleteBoardFromModal()" style="display: none;">Delete Board</button>
+                    <button type="submit" class="btn btn-primary" id="saveBoardBtn">Create Board</button>
                 </div>
             </form>
         </div>
@@ -409,6 +419,7 @@
     <script>
         // Global variables
         let boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+        let currentEditBoardId = null;
 
         // Generate unique ID
         function generateId() {
@@ -509,13 +520,18 @@
 
         // Modal functions
         function openCreateBoardModal() {
+            currentEditBoardId = null;
+            document.getElementById('modalTitle').textContent = 'Create New Board';
             document.getElementById('boardTitle').value = '';
             document.getElementById('boardDescription').value = '';
+            document.getElementById('deleteBoardBtn').style.display = 'none';
+            document.getElementById('saveBoardBtn').textContent = 'Create Board';
             document.getElementById('boardModal').style.display = 'block';
         }
 
         function closeModal() {
             document.getElementById('boardModal').style.display = 'none';
+            currentEditBoardId = null;
         }
 
         // Open board (navigate to kanban board)
@@ -544,10 +560,26 @@
             }
         }
 
-        // Edit board (for now, just opens create modal with existing data)
+        // Edit board (opens modal with existing data)
         function editBoard(boardId) {
-            // This would open an edit modal - for simplicity, showing alert
-            alert('Edit functionality can be added similar to the create modal, but with pre-filled data and update logic.');
+            const board = boards.find(b => b.id === boardId);
+            if (!board) return;
+
+            currentEditBoardId = boardId;
+            document.getElementById('modalTitle').textContent = 'Edit Board';
+            document.getElementById('boardTitle').value = board.title;
+            document.getElementById('boardDescription').value = board.description || '';
+            document.getElementById('deleteBoardBtn').style.display = 'inline-block';
+            document.getElementById('saveBoardBtn').textContent = 'Update Board';
+            document.getElementById('boardModal').style.display = 'block';
+        }
+
+        // Delete board from modal
+        function deleteBoardFromModal() {
+            if (currentEditBoardId) {
+                deleteBoard(currentEditBoardId);
+                closeModal();
+            }
         }
 
         // Form submission
@@ -559,16 +591,26 @@
             
             if (!title) return;
 
-            // Create new board
-            const newBoard = {
-                id: generateId(),
-                title: title,
-                description: description,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
+            if (currentEditBoardId) {
+                // Update existing board
+                const boardIndex = boards.findIndex(board => board.id === currentEditBoardId);
+                if (boardIndex !== -1) {
+                    boards[boardIndex].title = title;
+                    boards[boardIndex].description = description;
+                    boards[boardIndex].updatedAt = new Date().toISOString();
+                }
+            } else {
+                // Create new board
+                const newBoard = {
+                    id: generateId(),
+                    title: title,
+                    description: description,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                boards.push(newBoard);
+            }
 
-            boards.push(newBoard);
             saveBoards();
             renderBoards();
             closeModal();
