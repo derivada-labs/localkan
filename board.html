@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Todo Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin: 0;
+        }
+
+        .board {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .column {
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        .column-title {
+            font-weight: 600;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .add-card-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .add-card-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .cards-container {
+            min-height: 200px;
+            padding: 10px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            cursor: grabbing;
+        }
+
+        .card-content {
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            min-height: 20px;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            min-height: 18px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .card-action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .card-action-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .card-timestamp {
+            font-size: 0.7rem;
+            color: #999;
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .column.drag-over {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3838;
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .column {
+                min-width: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <button class="back-btn" onclick="goBackToBoards()" title="Back to Boards">← Boards</button>
+            <h1 id="boardTitle">Kanban Todo Board</h1>
+        </div>
+    </div>
+
+    <div class="board" id="board">
+        <div class="column" data-column="backlog">
+            <div class="column-header">
+                <span class="column-title">Backlog</span>
+                <button class="add-card-btn" onclick="openAddCardModal('backlog')">+ Add Card</button>
+            </div>
+            <div class="cards-container" id="backlog-cards"></div>
+        </div>
+
+        <div class="column" data-column="todo">
+            <div class="column-header">
+                <span class="column-title">TO-DO</span>
+                <button class="add-card-btn" onclick="openAddCardModal('todo')">+ Add Card</button>
+            </div>
+            <div class="cards-container" id="todo-cards"></div>
+        </div>
+
+        <div class="column" data-column="doing">
+            <div class="column-header">
+                <span class="column-title">Doing</span>
+                <button class="add-card-btn" onclick="openAddCardModal('doing')">+ Add Card</button>
+            </div>
+            <div class="cards-container" id="doing-cards"></div>
+        </div>
+
+        <div class="column" data-column="done">
+            <div class="column-header">
+                <span class="column-title">Done</span>
+                <button class="add-card-btn" onclick="openAddCardModal('done')">+ Add Card</button>
+            </div>
+            <div class="cards-container" id="done-cards"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Card Modal -->
+    <div id="cardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">Add New Card</span>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="cardForm">
+                <div class="form-group">
+                    <label for="cardTitle">Title *</label>
+                    <input type="text" id="cardTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="cardDescription">Description</label>
+                    <textarea id="cardDescription" placeholder="Optional description..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn" onclick="deleteCard()" style="display: none;">Delete</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Card</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let cards = [];
+        let currentCardId = null;
+        let currentColumn = null;
+        let draggedCard = null;
+        let currentBoardId = null;
+
+        // Initialize board
+        function initializeBoard() {
+            // Get board ID from localStorage (set by dashboard)
+            currentBoardId = localStorage.getItem('currentBoardId');
+            
+            if (!currentBoardId) {
+                // If no board ID, redirect to dashboard or show error
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; text-align: center;">
+                        <h2>No Board Selected</h2>
+                        <p>Please select a board from the dashboard.</p>
+                        <button onclick="window.location.href='boards.html'" style="margin-top: 20px; padding: 10px 20px; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 5px; cursor: pointer;">Go to Dashboard</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Load board data
+            const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+            const currentBoard = boards.find(board => board.id === currentBoardId);
+            
+            if (currentBoard) {
+                document.getElementById('boardTitle').textContent = currentBoard.title;
+                document.title = `${currentBoard.title} - Kanban Board`;
+            }
+
+            // Load cards for this specific board
+            cards = JSON.parse(localStorage.getItem(`kanbanCards_${currentBoardId}`)) || [];
+            renderCards();
+        }
+
+        // Go back to boards dashboard
+        function goBackToBoards() {
+            localStorage.removeItem('currentBoardId');
+            window.location.href = 'boards.html';
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Save cards to localStorage
+        function saveCards() {
+            if (currentBoardId) {
+                localStorage.setItem(`kanbanCards_${currentBoardId}`, JSON.stringify(cards));
+            }
+        }
+
+        // Format date
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Create card HTML
+        function createCardHTML(card) {
+            return `
+                <div class="card" draggable="true" data-card-id="${card.id}">
+                    <div class="card-content">
+                        <div class="card-title">${card.title}</div>
+                        <div class="card-description">${card.description || ''}</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="card-action-btn" onclick="editCard('${card.id}')">Edit</button>
+                        <button class="card-action-btn" onclick="deleteCardConfirm('${card.id}')">Delete</button>
+                    </div>
+                    <div class="card-timestamp">${formatDate(card.createdAt)}</div>
+                </div>
+            `;
+        }
+
+        // Render all cards
+        function renderCards() {
+            const columns = ['backlog', 'todo', 'doing', 'done'];
+            
+            columns.forEach(column => {
+                const container = document.getElementById(`${column}-cards`);
+                const columnCards = cards.filter(card => card.column === column);
+                container.innerHTML = columnCards.map(createCardHTML).join('');
+            });
+
+            // Add drag event listeners to all cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        // Modal functions
+        function openAddCardModal(column) {
+            currentColumn = column;
+            currentCardId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Card';
+            document.getElementById('cardTitle').value = '';
+            document.getElementById('cardDescription').value = '';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = 'Save Card';
+            document.getElementById('cardModal').style.display = 'block';
+        }
+
+        function editCard(cardId) {
+            const card = cards.find(c => c.id === cardId);
+            if (!card) return;
+
+            currentCardId = cardId;
+            currentColumn = card.column;
+            document.getElementById('modalTitle').textContent = 'Edit Card';
+            document.getElementById('cardTitle').value = card.title;
+            document.getElementById('cardDescription').value = card.description || '';
+            document.getElementById('deleteBtn').style.display = 'inline-block';
+            document.getElementById('saveBtn').textContent = 'Update Card';
+            document.getElementById('cardModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('cardModal').style.display = 'none';
+            currentCardId = null;
+            currentColumn = null;
+        }
+
+        function deleteCard() {
+            if (currentCardId) {
+                cards = cards.filter(card => card.id !== currentCardId);
+                saveCards();
+                renderCards();
+                closeModal();
+            }
+        }
+
+        function deleteCardConfirm(cardId) {
+            if (confirm('Are you sure you want to delete this card?')) {
+                cards = cards.filter(card => card.id !== cardId);
+                saveCards();
+                renderCards();
+            }
+        }
+
+        // Form submission
+        document.getElementById('cardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('cardTitle').value.trim();
+            const description = document.getElementById('cardDescription').value.trim();
+            
+            if (!title) return;
+
+            if (currentCardId) {
+                // Update existing card
+                const cardIndex = cards.findIndex(card => card.id === currentCardId);
+                if (cardIndex !== -1) {
+                    cards[cardIndex].title = title;
+                    cards[cardIndex].description = description;
+                    cards[cardIndex].updatedAt = new Date().toISOString();
+                }
+            } else {
+                // Create new card
+                const newCard = {
+                    id: generateId(),
+                    title: title,
+                    description: description,
+                    column: currentColumn,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                cards.push(newCard);
+            }
+
+            saveCards();
+            renderCards();
+            closeModal();
+        });
+
+        // Drag and drop functionality
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedCard = null;
+        }
+
+        // Add drag and drop listeners to columns
+        document.querySelectorAll('.column').forEach(column => {
+            column.addEventListener('dragover', handleDragOver);
+            column.addEventListener('drop', handleDrop);
+            column.addEventListener('dragenter', handleDragEnter);
+            column.addEventListener('dragleave', handleDragLeave);
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (!draggedCard) return;
+
+            const newColumn = this.dataset.column;
+            const cardId = draggedCard.dataset.cardId;
+            
+            // Update card column
+            const cardIndex = cards.findIndex(card => card.id === cardId);
+            if (cardIndex !== -1) {
+                cards[cardIndex].column = newColumn;
+                cards[cardIndex].updatedAt = new Date().toISOString();
+                saveCards();
+                renderCards();
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('cardModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialize the app
+        initializeBoard();
+    </script>
+</body>
+</html>
