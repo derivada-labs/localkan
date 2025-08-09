@@ -76,6 +76,38 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            margin-top: -15px; /* Pull up to align better with workspace section */
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 16px; /* Slightly larger padding to match workspace card height */
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 44px; /* Fixed height to match workspace card */
+        }
+
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .hidden {
+            display: none;
         }
 
         .section-title {
@@ -363,6 +395,15 @@
                 gap: 15px;
                 text-align: center;
             }
+            
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .action-button {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -384,6 +425,17 @@
                 <span>👥</span>
                 Your boards
             </h2>
+            <div class="header-actions">
+                <button class="action-button" onclick="exportBoards()">
+                    <span>📥</span>
+                    Export Boards
+                </button>
+                <button class="action-button" onclick="triggerImport()">
+                    <span>📤</span>
+                    Import Boards
+                </button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBoards(event)">
+            </div>
         </div>
 
         <div class="boards-grid" id="boardsGrid">
@@ -580,6 +632,123 @@
                 deleteBoard(currentEditBoardId);
                 closeModal();
             }
+        }
+
+        // Import/Export functionality
+        function exportBoards() {
+            // Prepare export data
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                version: "1.0",
+                boards: boards,
+                cards: {}
+            };
+
+            // Collect all cards for each board
+            boards.forEach(board => {
+                const boardCards = JSON.parse(localStorage.getItem(`kanbanCards_${board.id}`)) || [];
+                exportData.cards[board.id] = boardCards;
+            });
+
+            // Create and download file
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `kanban-boards-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            // Cleanup
+            URL.revokeObjectURL(link.href);
+            
+            alert(`Successfully exported ${boards.length} boards with all their cards!`);
+        }
+
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        function importBoards(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // Validate file structure
+                    if (!importData.boards || !importData.cards || !importData.version) {
+                        throw new Error('Invalid file format');
+                    }
+
+                    // Ask user about merge vs replace
+                    const shouldReplace = confirm(
+                        `Import ${importData.boards.length} boards?\n\n` +
+                        `• Choose "OK" to ADD these boards to your existing ones\n` +
+                        `• Choose "Cancel" to abort the import\n\n` +
+                        `Note: Existing boards will not be affected.`
+                    );
+
+                    if (!shouldReplace) {
+                        // Reset file input
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Generate new IDs to avoid conflicts
+                    const idMapping = {};
+                    let importedBoardsCount = 0;
+                    let importedCardsCount = 0;
+
+                    importData.boards.forEach(board => {
+                        const newBoardId = generateId();
+                        idMapping[board.id] = newBoardId;
+
+                        // Create new board with new ID
+                        const newBoard = {
+                            ...board,
+                            id: newBoardId,
+                            title: board.title + ' (Imported)',
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        boards.push(newBoard);
+                        importedBoardsCount++;
+
+                        // Import cards for this board
+                        const boardCards = importData.cards[board.id] || [];
+                        const newCards = boardCards.map(card => ({
+                            ...card,
+                            id: generateId(),
+                            updatedAt: new Date().toISOString()
+                        }));
+
+                        localStorage.setItem(`kanbanCards_${newBoardId}`, JSON.stringify(newCards));
+                        importedCardsCount += newCards.length;
+                    });
+
+                    // Save updated boards
+                    saveBoards();
+                    renderBoards();
+
+                    alert(
+                        `Successfully imported!\n\n` +
+                        `• ${importedBoardsCount} boards\n` +
+                        `• ${importedCardsCount} cards\n\n` +
+                        `Imported boards have "(Imported)" suffix to avoid name conflicts.`
+                    );
+
+                } catch (error) {
+                    alert('Error importing file: ' + error.message + '\n\nPlease make sure you selected a valid Kanban export file.');
+                } finally {
+                    // Reset file input
+                    event.target.value = '';
+                }
+            };
+
+            reader.readAsText(file);
         }
 
         // Form submission
