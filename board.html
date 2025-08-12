@@ -97,6 +97,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
+            position: relative;
         }
 
         .column-header {
@@ -128,6 +129,29 @@
 
         .add-card-btn:hover {
             background: rgba(255, 255, 255, 0.4);
+        }
+
+        .mass-delete-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .mass-delete-btn:hover {
+            background: rgba(255, 100, 100, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
         }
 
         .cards-container {
@@ -444,6 +468,7 @@
                 <button class="add-card-btn" onclick="openAddCardModal('backlog')">+ Add Card</button>
             </div>
             <div class="cards-container" id="backlog-cards"></div>
+            <button class="mass-delete-btn" id="backlog-mass-delete" onclick="massDeleteCards('backlog')" title="Delete all cards in this column">AA🔥</button>
         </div>
 
         <div class="column" data-column="todo">
@@ -452,6 +477,7 @@
                 <button class="add-card-btn" onclick="openAddCardModal('todo')">+ Add Card</button>
             </div>
             <div class="cards-container" id="todo-cards"></div>
+            <button class="mass-delete-btn" id="todo-mass-delete" onclick="massDeleteCards('todo')" title="Delete all cards in this column">🔥</button>
         </div>
 
         <div class="column" data-column="doing">
@@ -460,6 +486,7 @@
                 <button class="add-card-btn" onclick="openAddCardModal('doing')">+ Add Card</button>
             </div>
             <div class="cards-container" id="doing-cards"></div>
+            <button class="mass-delete-btn" id="doing-mass-delete" onclick="massDeleteCards('doing')" title="Delete all cards in this column">🔥</button>
         </div>
 
         <div class="column" data-column="done">
@@ -468,6 +495,7 @@
                 <button class="add-card-btn" onclick="openAddCardModal('done')">+ Add Card</button>
             </div>
             <div class="cards-container" id="done-cards"></div>
+            <button class="mass-delete-btn" id="done-mass-delete" onclick="massDeleteCards('done')" title="Delete all cards in this column">🔥</button>
         </div>
     </div>
 
@@ -668,8 +696,42 @@
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
             });
+
+            // Add mass delete buttons
+            updateMassDeleteButtons();
         }
 
+        // Show or don't show buttons
+        function updateMassDeleteButtons() {
+            const columns = ['backlog', 'todo', 'doing', 'done'];
+            
+            columns.forEach(column => {
+                const columnCards = cards.filter(card => card.column === column);
+                const massDeleteBtn = document.getElementById(`${column}-mass-delete`);
+                
+                if (columnCards.length > 0) {
+                    massDeleteBtn.style.display = 'block';
+                } else {
+                    massDeleteBtn.style.display = 'none';
+                }
+            });
+        }
+
+        // Mass delete all cards in a specific column
+        function massDeleteCards(column) {
+            const columnCards = cards.filter(card => card.column === column);
+            
+            if (columnCards.length === 0) return;
+            
+            const confirmMessage = `Are you sure you want to delete ALL ${columnCards.length} card(s) in the ${column.toUpperCase()} column?\n\nThis action cannot be undone.`;
+            
+            if (confirm(confirmMessage)) {
+                cards = cards.filter(card => card.column !== column);
+                saveCards();
+                renderCards();
+            }
+        }
+        
         // Render color picker
         function renderColorPicker() {
             const colorPicker = document.getElementById('colorPicker');
