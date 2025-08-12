@@ -483,15 +483,27 @@
                 <span class="modal-title">Board Settings</span>
                 <span class="close" onclick="closeSettingsModal()">&times;</span>
             </div>
-            <div class="form-group">
-                <label>Background Color</label>
-                <div class="color-picker-grid" id="colorPicker">
-                    <!-- Color options will be rendered here -->
+            <form id="boardSettingsForm">
+                <div class="form-group">
+                    <label for="settingsBoardTitle">Board Title *</label>
+                    <input type="text" id="settingsBoardTitle" required placeholder="Enter board title...">
                 </div>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Close</button>
-            </div>
+                <div class="form-group">
+                    <label for="settingsBoardDescription">Description</label>
+                    <textarea id="settingsBoardDescription" placeholder="What is this board about? (optional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Background Color</label>
+                    <div class="color-picker-grid" id="colorPicker">
+                        <!-- Color options will be rendered here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteBoardFromSettings()">Delete Board</button>
+                    <button type="submit" class="btn btn-primary">Update Board</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -502,6 +514,7 @@
         let currentColumn = null;
         let draggedCard = null;
         let currentBoardId = null;
+        let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
 
         // Color themes
         const colorThemes = [
@@ -640,12 +653,9 @@
         // Render color picker
         function renderColorPicker() {
             const colorPicker = document.getElementById('colorPicker');
-            const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
-            const currentBoard = boards.find(board => board.id === currentBoardId);
-            const currentBg = currentBoard?.backgroundColor || colorThemes[0].gradient;
             
             colorPicker.innerHTML = colorThemes.map((theme, index) => `
-                <div class="color-option ${theme.gradient === currentBg ? 'selected' : ''}" 
+                <div class="color-option ${theme.gradient === selectedBackgroundColor ? 'selected' : ''}" 
                      style="background: ${theme.gradient}" 
                      onclick="selectColor('${theme.gradient}')"
                      title="${theme.name}">
@@ -655,11 +665,10 @@
 
         // Select color theme
         function selectColor(gradient) {
+            selectedBackgroundColor = gradient;
+            
             // Update background immediately
             document.body.style.background = gradient;
-            
-            // Save to localStorage
-            saveBoardColor(gradient);
             
             // Update color picker UI
             document.querySelectorAll('.color-option').forEach(option => {
@@ -670,11 +679,38 @@
 
         // Settings modal functions
         function openSettingsModal() {
+            // Load current board data
+            const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+            const currentBoard = boards.find(board => board.id === currentBoardId);
+            
+            if (currentBoard) {
+                document.getElementById('settingsBoardTitle').value = currentBoard.title;
+                document.getElementById('settingsBoardDescription').value = currentBoard.description || '';
+                selectedBackgroundColor = currentBoard.backgroundColor || colorThemes[0].gradient;
+                renderColorPicker();
+            }
+            
             document.getElementById('settingsModal').style.display = 'block';
         }
 
         function closeSettingsModal() {
             document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function deleteBoardFromSettings() {
+            if (confirm('Are you sure you want to delete this board?\n\nThis will also delete all cards in this board. This action cannot be undone.')) {
+                // Remove board
+                const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+                const updatedBoards = boards.filter(b => b.id !== currentBoardId);
+                localStorage.setItem('kanbanBoards', JSON.stringify(updatedBoards));
+                
+                // Remove board's cards
+                localStorage.removeItem(`kanbanCards_${currentBoardId}`);
+                
+                // Navigate back to dashboard
+                localStorage.removeItem('currentBoardId');
+                window.location.href = 'boards.html';
+            }
         }
 
         // Card modal functions
@@ -726,7 +762,7 @@
             }
         }
 
-        // Form submission
+        // Form submission for cards
         document.getElementById('cardForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -759,6 +795,34 @@
             saveCards();
             renderCards();
             closeModal();
+        });
+
+        // Form submission for board settings
+        document.getElementById('boardSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('settingsBoardTitle').value.trim();
+            const description = document.getElementById('settingsBoardDescription').value.trim();
+            
+            if (!title) return;
+
+            // Update board data
+            const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+            const boardIndex = boards.findIndex(board => board.id === currentBoardId);
+            
+            if (boardIndex !== -1) {
+                boards[boardIndex].title = title;
+                boards[boardIndex].description = description;
+                boards[boardIndex].backgroundColor = selectedBackgroundColor;
+                boards[boardIndex].updatedAt = new Date().toISOString();
+                localStorage.setItem('kanbanBoards', JSON.stringify(boards));
+                
+                // Update page title and board title
+                document.getElementById('boardTitle').textContent = title;
+                document.title = `${title} - Kanban Board`;
+            }
+
+            closeSettingsModal();
         });
 
         // Drag and drop functionality
