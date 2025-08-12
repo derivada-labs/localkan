@@ -479,18 +479,8 @@
                 <span>👥</span>
                 Your boards
             </h2>
-            <div class="header-actions">
-                <button class="action-button" onclick="exportBoards()">
-                    <span>📥</span>
-                    Export Boards
-                </button>
-                <button class="action-button" onclick="triggerImport()">
-                    <span>📤</span>
-                    Import Boards
-                </button>
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBoards(event)">
-            </div>
         </div>
+        <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBoards(event)">
 
         <div class="boards-grid" id="boardsGrid">
             <!-- Boards will be rendered here -->
@@ -544,6 +534,17 @@
                     <label>Background Color</label>
                     <div class="color-picker-grid" id="workspaceColorPicker">
                         <!-- Color options will be rendered here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Workspace Management</label>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" class="btn btn-secondary" onclick="exportBoards()" style="flex: 1;">
+                            📥 Export Boards
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="triggerImport()" style="flex: 1;">
+                            📤 Import Boards
+                        </button>
                     </div>
                 </div>
                 <div class="modal-actions">
