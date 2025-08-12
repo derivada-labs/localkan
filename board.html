@@ -67,12 +67,15 @@
         }
 
         .column {
+            width: 300px;
+            max-width: 300px;
             min-width: 300px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
         }
 
         .column-header {
@@ -120,6 +123,8 @@
             cursor: grab;
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
+            width: 100%;
+            word-wrap: break-word;
         }
 
         .card:hover {
@@ -142,6 +147,8 @@
             color: #333;
             margin-bottom: 5px;
             min-height: 20px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .card-description {
@@ -149,6 +156,12 @@
             font-size: 0.9rem;
             line-height: 1.4;
             min-height: 18px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
         }
 
         .card-actions {
@@ -309,6 +322,8 @@
             
             .column {
                 min-width: auto;
+                width: 100%;
+                max-width: none;
             }
             
             .header h1 {
@@ -457,13 +472,22 @@
             });
         }
 
+        // Truncate text to specified length
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
         // Create card HTML
         function createCardHTML(card) {
+            const truncatedDescription = truncateText(card.description || '', 150);
+            
             return `
                 <div class="card" draggable="true" data-card-id="${card.id}">
                     <div class="card-content">
                         <div class="card-title">${card.title}</div>
-                        <div class="card-description">${card.description || ''}</div>
+                        <div class="card-description">${truncatedDescription}</div>
                     </div>
                     <div class="card-actions">
                         <button class="card-action-btn" onclick="editCard('${card.id}')">Edit</button>
