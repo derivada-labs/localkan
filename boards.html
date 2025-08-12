@@ -127,7 +127,6 @@
         }
 
         .board-card {
-            background: rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 20px;
             backdrop-filter: blur(10px);
@@ -140,7 +139,6 @@
 
         .board-card:hover {
             transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.2);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
@@ -378,6 +376,47 @@
             margin-bottom: 20px;
         }
 
+        /* Color Picker Styles */
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .color-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .color-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -403,6 +442,10 @@
             
             .action-button {
                 justify-content: center;
+            }
+
+            .color-picker-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -459,6 +502,12 @@
                     <label for="boardDescription">Description</label>
                     <textarea id="boardDescription" placeholder="What is this board about? (optional)"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>Background Color</label>
+                    <div class="color-picker-grid" id="colorPicker">
+                        <!-- Color options will be rendered here -->
+                    </div>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBoardBtn" onclick="deleteBoardFromModal()" style="display: none;">Delete Board</button>
@@ -472,6 +521,20 @@
         // Global variables
         let boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
         let currentEditBoardId = null;
+        let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
+
+        // Color themes
+        const colorThemes = [
+            { name: 'Purple', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            { name: 'Blue', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)' },
+            { name: 'Green', gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' },
+            { name: 'Orange', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+            { name: 'Red', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+            { name: 'Pink', gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)' },
+            { name: 'Teal', gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' },
+            { name: 'Indigo', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
+            { name: 'Gray', gradient: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' }
+        ];
 
         // Generate unique ID
         function generateId() {
@@ -514,9 +577,10 @@
         // Create board card HTML
         function createBoardCardHTML(board) {
             const stats = getBoardStats(board.id);
+            const backgroundColor = board.backgroundColor || 'rgba(255, 255, 255, 0.15)';
             
             return `
-                <div class="board-card" onclick="openBoard('${board.id}')">
+                <div class="board-card" onclick="openBoard('${board.id}')" style="background: ${backgroundColor}">
                     <div class="board-actions">
                         <button class="action-btn" onclick="event.stopPropagation(); editBoard('${board.id}')">Edit</button>
                         <button class="action-btn delete" onclick="event.stopPropagation(); deleteBoard('${board.id}')">Delete</button>
@@ -552,6 +616,30 @@
             `;
         }
 
+        // Render color picker
+        function renderColorPicker(selectedColor = colorThemes[0].gradient) {
+            const colorPicker = document.getElementById('colorPicker');
+            
+            colorPicker.innerHTML = colorThemes.map((theme, index) => `
+                <div class="color-option ${theme.gradient === selectedColor ? 'selected' : ''}" 
+                     style="background: ${theme.gradient}" 
+                     onclick="selectColor('${theme.gradient}')"
+                     title="${theme.name}">
+                </div>
+            `).join('');
+        }
+
+        // Select color theme
+        function selectColor(gradient) {
+            selectedBackgroundColor = gradient;
+            
+            // Update color picker UI
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
         // Render all boards
         function renderBoards() {
             const boardsGrid = document.getElementById('boardsGrid');
@@ -573,11 +661,13 @@
         // Modal functions
         function openCreateBoardModal() {
             currentEditBoardId = null;
+            selectedBackgroundColor = colorThemes[0].gradient; // Reset to default
             document.getElementById('modalTitle').textContent = 'Create New Board';
             document.getElementById('boardTitle').value = '';
             document.getElementById('boardDescription').value = '';
             document.getElementById('deleteBoardBtn').style.display = 'none';
             document.getElementById('saveBoardBtn').textContent = 'Create Board';
+            renderColorPicker(selectedBackgroundColor);
             document.getElementById('boardModal').style.display = 'block';
         }
 
@@ -618,11 +708,13 @@
             if (!board) return;
 
             currentEditBoardId = boardId;
+            selectedBackgroundColor = board.backgroundColor || colorThemes[0].gradient;
             document.getElementById('modalTitle').textContent = 'Edit Board';
             document.getElementById('boardTitle').value = board.title;
             document.getElementById('boardDescription').value = board.description || '';
             document.getElementById('deleteBoardBtn').style.display = 'inline-block';
             document.getElementById('saveBoardBtn').textContent = 'Update Board';
+            renderColorPicker(selectedBackgroundColor);
             document.getElementById('boardModal').style.display = 'block';
         }
 
@@ -766,6 +858,7 @@
                 if (boardIndex !== -1) {
                     boards[boardIndex].title = title;
                     boards[boardIndex].description = description;
+                    boards[boardIndex].backgroundColor = selectedBackgroundColor;
                     boards[boardIndex].updatedAt = new Date().toISOString();
                 }
             } else {
@@ -774,6 +867,7 @@
                     id: generateId(),
                     title: title,
                     description: description,
+                    backgroundColor: selectedBackgroundColor,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
