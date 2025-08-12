@@ -32,6 +32,17 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-section:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .user-avatar {
@@ -453,11 +464,11 @@
 <body>
     <div class="header">
         <div class="logo">Kanban Boards</div>
-        <div class="user-section">
+        <div class="user-section" onclick="openWorkspaceSettings()">
             <div class="user-avatar">U</div>
             <div class="user-info">
-                <h2>Your Workspace</h2>
-                <p>Personal boards</p>
+                <h2 id="workspaceName">My workspace</h2>
+                <p>Local boards</p>
             </div>
         </div>
     </div>
@@ -517,11 +528,38 @@
         </div>
     </div>
 
+    <!-- Workspace Settings Modal -->
+    <div id="workspaceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Workspace Settings</span>
+                <span class="close" onclick="closeWorkspaceModal()">&times;</span>
+            </div>
+            <form id="workspaceForm">
+                <div class="form-group">
+                    <label for="workspaceTitle">Workspace Name *</label>
+                    <input type="text" id="workspaceTitle" required placeholder="Enter workspace name...">
+                </div>
+                <div class="form-group">
+                    <label>Background Color</label>
+                    <div class="color-picker-grid" id="workspaceColorPicker">
+                        <!-- Color options will be rendered here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeWorkspaceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Workspace</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
         let currentEditBoardId = null;
         let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
+        let selectedWorkspaceColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default workspace color
 
         // Color themes
         const colorThemes = [
@@ -535,6 +573,27 @@
             { name: 'Indigo', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
             { name: 'Gray', gradient: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' }
         ];
+
+        // Initialize workspace
+        function initializeWorkspace() {
+            const workspaceSettings = JSON.parse(localStorage.getItem('workspaceSettings')) || {
+                name: 'My workspace',
+                backgroundColor: colorThemes[0].gradient
+            };
+            
+            document.getElementById('workspaceName').textContent = workspaceSettings.name;
+            document.body.style.background = workspaceSettings.backgroundColor;
+            selectedWorkspaceColor = workspaceSettings.backgroundColor;
+        }
+
+        // Save workspace settings
+        function saveWorkspaceSettings(name, backgroundColor) {
+            const workspaceSettings = {
+                name: name,
+                backgroundColor: backgroundColor
+            };
+            localStorage.setItem('workspaceSettings', JSON.stringify(workspaceSettings));
+        }
 
         // Generate unique ID
         function generateId() {
@@ -629,15 +688,59 @@
             `).join('');
         }
 
+        // Render workspace color picker
+        function renderWorkspaceColorPicker(selectedColor = colorThemes[0].gradient) {
+            const colorPicker = document.getElementById('workspaceColorPicker');
+            
+            colorPicker.innerHTML = colorThemes.map((theme, index) => `
+                <div class="color-option ${theme.gradient === selectedColor ? 'selected' : ''}" 
+                     style="background: ${theme.gradient}" 
+                     onclick="selectWorkspaceColor('${theme.gradient}')"
+                     title="${theme.name}">
+                </div>
+            `).join('');
+        }
+
         // Select color theme
         function selectColor(gradient) {
             selectedBackgroundColor = gradient;
             
             // Update color picker UI
-            document.querySelectorAll('.color-option').forEach(option => {
+            document.querySelectorAll('#colorPicker .color-option').forEach(option => {
                 option.classList.remove('selected');
             });
             event.target.classList.add('selected');
+        }
+
+        // Select workspace color theme
+        function selectWorkspaceColor(gradient) {
+            selectedWorkspaceColor = gradient;
+            
+            // Update background immediately
+            document.body.style.background = gradient;
+            
+            // Update color picker UI
+            document.querySelectorAll('#workspaceColorPicker .color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        // Workspace modal functions
+        function openWorkspaceSettings() {
+            const workspaceSettings = JSON.parse(localStorage.getItem('workspaceSettings')) || {
+                name: 'My workspace',
+                backgroundColor: colorThemes[0].gradient
+            };
+            
+            document.getElementById('workspaceTitle').value = workspaceSettings.name;
+            selectedWorkspaceColor = workspaceSettings.backgroundColor;
+            renderWorkspaceColorPicker(selectedWorkspaceColor);
+            document.getElementById('workspaceModal').style.display = 'block';
+        }
+
+        function closeWorkspaceModal() {
+            document.getElementById('workspaceModal').style.display = 'none';
         }
 
         // Render all boards
@@ -879,11 +982,31 @@
             closeModal();
         });
 
+        // Workspace form submission
+        document.getElementById('workspaceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('workspaceTitle').value.trim();
+            
+            if (!name) return;
+
+            // Update workspace
+            saveWorkspaceSettings(name, selectedWorkspaceColor);
+            document.getElementById('workspaceName').textContent = name;
+            
+            closeWorkspaceModal();
+        });
+
         // Close modal when clicking outside
         window.addEventListener('click', function(e) {
-            const modal = document.getElementById('boardModal');
-            if (e.target === modal) {
+            const boardModal = document.getElementById('boardModal');
+            const workspaceModal = document.getElementById('workspaceModal');
+            
+            if (e.target === boardModal) {
                 closeModal();
+            }
+            if (e.target === workspaceModal) {
+                closeWorkspaceModal();
             }
         });
 
@@ -891,10 +1014,12 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeWorkspaceModal();
             }
         });
 
         // Initialize the app
+        initializeWorkspace();
         renderBoards();
     </script>
 </body>
