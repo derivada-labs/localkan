@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/boards.html" },
+    { "source": "/api/sync/check/:hash", "destination": "/api/sync/check/[hash]" },
+    { "source": "/api/sync/data/:hash", "destination": "/api/sync/data/[hash]" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ]
+}

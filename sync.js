@@ -1,7 +1,10 @@
 // Sync Manager for Kanban Todo App with Multi-User Support
 class SyncManager {
     constructor() {
-        this.serverUrl = 'http://localhost:3001';
+        // Dynamic server URL - uses /api for production (Vercel), localhost for development
+        this.serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3001'
+            : '/api';
         this.isOnline = false;
         this.isSyncing = false;
         this.userHash = localStorage.getItem('userSyncHash') || null;
