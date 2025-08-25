@@ -47,17 +47,20 @@ export default async function handler(req, res) {
         
         res.status(200).json({
             exists: data !== null,
-            hash: sanitizedHash
+            hash: sanitizedHash,
+            mode: 'production'
         });
     } catch (error) {
         console.error('Error checking hash:', error);
         
-        // If KV is not configured, use fallback response
+        // If KV is not configured, always return true in demo mode
+        // This prevents "Sync ID not found" errors when KV isn't set up
         if (error.message && (error.message.includes('KV_') || error.message.includes('No KV'))) {
             return res.status(200).json({
-                exists: false,
+                exists: true, // Always true in demo mode to allow testing
                 hash: req.query.hash,
-                warning: 'KV storage not configured - using demo mode'
+                mode: 'demo',
+                warning: 'Demo mode - Set up Vercel KV for persistence'
             });
         }
         

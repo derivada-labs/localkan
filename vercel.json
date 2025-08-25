@@ -5,9 +5,7 @@
     }
   },
   "rewrites": [
-    { "source": "/", "destination": "/boards.html" },
-    { "source": "/api/sync/check/:hash", "destination": "/api/sync/check/[hash]" },
-    { "source": "/api/sync/data/:hash", "destination": "/api/sync/data/[hash]" }
+    { "source": "/", "destination": "/boards.html" }
   ],
   "headers": [
     {

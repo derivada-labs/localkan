@@ -1,10 +1,10 @@
 // Sync Manager for Kanban Todo App with Multi-User Support
 class SyncManager {
     constructor() {
-        // Dynamic server URL - uses /api for production (Vercel), localhost for development
+        // Dynamic server URL - uses empty string for production (Vercel), localhost for development
         this.serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3001'
-            : '/api';
+            : '';  // Empty string for production - URLs will be /api/sync/...
         this.isOnline = false;
         this.isSyncing = false;
         this.userHash = localStorage.getItem('userSyncHash') || null;
@@ -61,7 +61,10 @@ class SyncManager {
     // Check if a hash exists on the server
     async checkHashExists(hash) {
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/check/${hash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/check/${hash}`
+                : `/api/sync/check/${hash}`;
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -106,8 +109,11 @@ class SyncManager {
         const cleanHash = hash.toLowerCase().replace(/[^a-z0-9]/g, '');
         
         // Check if hash exists on server
-        const exists = await this.checkHashExists(cleanHash);
-        if (!exists) {
+        const checkResult = await this.checkHashExists(cleanHash);
+        
+        // In demo mode, we always proceed since data doesn't persist
+        // The checkHashExists now returns true in demo mode to prevent errors
+        if (!checkResult) {
             this.showSyncStatus('Sync ID not found', 'error');
             return false;
         }
@@ -147,7 +153,10 @@ class SyncManager {
     // Check server connectivity
     async checkServerConnection() {
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/status`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/status`
+                : '/api/sync/status';
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -200,7 +209,10 @@ class SyncManager {
         }
 
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/data/${this.userHash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/data/${this.userHash}`
+                : `/api/sync/data/${this.userHash}`;
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -260,7 +272,10 @@ class SyncManager {
         }
 
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/data/${this.userHash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/data/${this.userHash}`
+                : `/api/sync/data/${this.userHash}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(localData)
@@ -268,6 +283,14 @@ class SyncManager {
             
             if (response.ok) {
                 const result = await response.json();
+                
+                // Show warning if in demo mode
+                if (result.mode === 'demo' && result.warning) {
+                    console.warn('Demo mode:', result.warning);
+                    // Show abbreviated warning to user
+                    this.showSyncStatus('Demo mode - Set up Vercel KV for persistence', 'warning');
+                }
+                
                 return result.success;
             }
         } catch (error) {

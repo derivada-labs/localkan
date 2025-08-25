@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Kanban Todo App with Multi-User Cloud Sync",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
