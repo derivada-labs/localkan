@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Boards Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,10 +18,12 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
         }
 
         .header {
@@ -31,50 +39,67 @@
         .user-section {
             display: flex;
             align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px 15px;
-            border-radius: 12px;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: background 0.2s;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .user-section:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
         .user-avatar {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            justify-self: center;
             color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            border: 2px solid rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            font-size: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
         }
 
         .user-info h2 {
             color: white;
-            font-size: 1.5rem;
-            font-weight: 300;
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin: 0;
         }
 
         .user-info p {
             color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            margin: 0;
         }
 
         .logo {
             color: white;
-            font-size: 2rem;
-            font-weight: 300;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            letter-spacing: -0.02em;
         }
 
         .boards-section {
@@ -92,55 +117,113 @@
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .action-button {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 12px 16px; /* Slightly larger padding to match workspace card height */
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
             display: flex;
             align-items: center;
             gap: 8px;
-            height: 44px; /* Fixed height to match workspace card */
+            height: 44px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .action-button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sync-button {
-            min-width: 100px;
+            min-width: 120px;
+            position: relative;
+        }
+        
+        .sync-button.syncing i {
+            animation: syncRotate 1s linear infinite;
+        }
+        
+        @keyframes syncRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .sync-button.success {
+            background: rgba(16, 185, 129, 0.2) !important;
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+        }
+        
+        .sync-button.error {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
         }
 
         .sync-info {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.85rem;
-            padding: 0 10px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.8rem;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             display: flex;
             align-items: center;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .hash-button {
-            min-width: 120px;
+            min-width: 130px;
+        }
+        
+        .hash-button.has-id {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+        
+        .hash-button.has-id:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.2);
         }
 
         .sync-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .sync-button:disabled:hover {
+            transform: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         }
 
         #currentHashDisplay {
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
+            font-family: 'Monaco', 'Consolas', monospace;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .hidden {
@@ -149,11 +232,12 @@
 
         .section-title {
             color: white;
-            font-size: 1.3rem;
-            font-weight: 500;
+            font-size: 1.5rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.02em;
         }
 
         .boards-grid {
@@ -164,19 +248,21 @@
         }
 
         .board-card {
-            border-radius: 12px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .board-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .board-card.create-new {
@@ -195,15 +281,21 @@
         }
 
         .create-icon {
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 10px;
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            transition: transform 0.2s ease;
+        }
+        
+        .board-card.create-new:hover .create-icon {
+            transform: scale(1.1);
         }
 
         .create-text {
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         .board-header {
@@ -215,10 +307,11 @@
 
         .board-title {
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 8px;
             line-height: 1.3;
+            letter-spacing: -0.01em;
         }
 
         .board-description {
@@ -238,9 +331,10 @@
         .stat {
             display: flex;
             align-items: center;
-            gap: 5px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.8rem;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
         .board-date {
@@ -280,54 +374,24 @@
             background: rgba(255, 71, 87, 0.8);
         }
 
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        /* Custom Modal Enhancements */
+        .modal-backdrop.show {
+            opacity: 0.6;
         }
 
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            min-height: fit-content;
+        /* Override Bootstrap modal content for custom styling */
+        #hashModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
+        /* Custom modal header styling */
+        #hashModal .modal-title {
+            font-size: 1.5rem;
             font-weight: 600;
-            color: #333;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .close:hover {
-            color: #000;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
         }
 
         .form-group {
@@ -344,11 +408,19 @@
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
             font-family: inherit;
             font-size: 0.9rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .form-group textarea {
@@ -356,12 +428,7 @@
             min-height: 80px;
         }
 
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-        }
+        /* Remove old modal-actions as we're using Bootstrap */
 
         .btn {
             padding: 10px 20px;
@@ -457,6 +524,45 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
+        /* Custom styles for hash modal */
+        .letter-spacing-wide {
+            letter-spacing: 2px;
+        }
+        
+        .font-monospace {
+            font-family: 'Monaco', 'Consolas', monospace !important;
+        }
+        
+        /* Animation for modal content */
+        .modal.fade .modal-dialog {
+            transform: translate(0, -50px);
+            transition: all 0.3s ease-out;
+        }
+        
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+        
+        /* Hover effects for cards */
+        .card:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+        }
+        
+        /* Custom input focus styles */
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Toast positioning */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -489,16 +595,11 @@
             }
 
             /* Mobile modal improvements */
-            .modal-content {
-                margin: 5% auto;
-                margin-bottom: 20px;
-                width: 95%;
-                padding: 20px;
+            #hashModal .modal-content {
+                border-radius: 12px;
             }
 
-            .modal-actions {
-                flex-direction: column;
-            }
+            /* Remove old modal-actions mobile styles */
 
             .btn {
                 width: 100%;
@@ -511,10 +612,12 @@
     <div class="header">
         <div class="logo">Kanban Boards</div>
         <div class="user-section" onclick="openWorkspaceSettings()">
-            <div class="user-avatar">U</div>
+            <div class="user-avatar">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
             <div class="user-info">
                 <h2 id="workspaceName">My workspace</h2>
-                <p>Local boards</p>
+                <p><i class="bi bi-database-fill me-1"></i>Local Storage</p>
             </div>
         </div>
     </div>
@@ -522,17 +625,17 @@
     <div class="boards-section">
         <div class="section-header">
             <h2 class="section-title">
-                <span>👥</span>
+                <i class="bi bi-layout-wtf"></i>
                 Your boards
             </h2>
             <div class="header-actions">
                 <button class="action-button hash-button" onclick="openHashModal()" title="Manage Sync ID">
-                    <span>🔑</span>
+                    <i class="bi bi-cloud-plus-fill"></i>
                     <span id="hashButtonText">Setup Sync</span>
                 </button>
                 <button class="action-button sync-button" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>
-                    <span class="sync-icon">☁️</span>
-                    <span>Sync</span>
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Sync Now</span>
                 </button>
                 <div class="sync-info" id="syncInfo" style="display: none;">
                     <span class="sync-status-text">ID: <span id="currentHashDisplay">None</span> | Last: <span id="lastSyncTime">Never</span></span>
@@ -598,11 +701,11 @@
                 <div class="form-group">
                     <label>Workspace Management</label>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button type="button" class="btn btn-secondary" onclick="exportBoards()" style="flex: 1;">
-                            📥 Export Boards
+                        <button type="button" class="btn btn-outline-primary" onclick="exportBoards()" style="flex: 1;">
+                            <i class="bi bi-download me-2"></i>Export Boards
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="triggerImport()" style="flex: 1;">
-                            📤 Import Boards
+                        <button type="button" class="btn btn-outline-primary" onclick="triggerImport()" style="flex: 1;">
+                            <i class="bi bi-upload me-2"></i>Import Boards
                         </button>
                     </div>
                 </div>
@@ -615,14 +718,21 @@
     </div>
 
     <!-- Hash Management Modal -->
-    <div id="hashModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">Sync ID Management</span>
-                <span class="close" onclick="closeHashModal()">&times;</span>
-            </div>
-            <div id="hashModalContent">
-                <!-- Content will be dynamically generated -->
+    <div id="hashModal" class="modal fade" tabindex="-1" aria-labelledby="hashModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-1">
+                    <h1 class="modal-title fs-4 fw-semibold" id="hashModalLabel">
+                        <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                        Sync ID Management
+                    </h1>
+                    <button type="button" class="btn-close" onclick="closeHashModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div id="hashModalContent">
+                        <!-- Content will be dynamically generated -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -726,11 +836,11 @@
                     <div class="board-description">${board.description || 'No description provided'}</div>
                     <div class="board-stats">
                         <div class="stat">
-                            <span>📋</span>
+                            <i class="bi bi-card-list"></i>
                             <span>${stats.total} cards</span>
                         </div>
                         <div class="stat">
-                            <span>✅</span>
+                            <i class="bi bi-check-circle-fill"></i>
                             <span>${stats.done} done</span>
                         </div>
                     </div>
@@ -743,7 +853,7 @@
         function createNewBoardCardHTML() {
             return `
                 <div class="board-card create-new" onclick="openCreateBoardModal()">
-                    <div class="create-icon">+</div>
+                    <div class="create-icon"><i class="bi bi-plus-lg"></i></div>
                     <div class="create-text">Create new board</div>
                 </div>
             `;
@@ -1100,101 +1210,233 @@
             if (syncManager.hasHash()) {
                 // User has a hash
                 content.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="color: #10b981; margin-bottom: 10px;">Active Sync ID</h3>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <span style="font-size: 1.5rem; font-weight: bold; color: #333; letter-spacing: 2px;">
-                                ${syncManager.getHash().toUpperCase()}
-                            </span>
-                            <button onclick="copyHashToClipboard()" class="btn btn-secondary" style="padding: 5px 10px;">
-                                📋 Copy
+                    <div class="alert alert-success border-0 shadow-sm mb-4" role="alert">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2 fs-5"></i>
+                            <h5 class="alert-heading mb-0 fw-semibold">Active Sync ID</h5>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between bg-white rounded p-3 mt-3">
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary-emphasis fs-6 fw-bold font-monospace letter-spacing-wide px-3 py-2">
+                                    ${syncManager.getHash().toUpperCase()}
+                                </span>
+                            </div>
+                            <button onclick="copyHashToClipboard()" class="btn btn-outline-primary btn-sm" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">
+                                <i class="bi bi-clipboard me-1"></i>Copy
                             </button>
                         </div>
-                        <p style="color: #666; margin-top: 10px; font-size: 0.9rem;">
+                        <p class="text-muted small mt-2 mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
                             Use this ID on other devices to sync your boards
                         </p>
                     </div>
                     
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
-                    
-                    <div class="form-group">
-                        <label><strong>Switch to Different Sync ID</strong></label>
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">
-                            Warning: This will replace all your local data
-                        </p>
-                        <input type="text" id="switchHashInput" placeholder="Enter existing Sync ID" 
-                               style="text-transform: uppercase;" maxlength="20">
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" onclick="closeHashModal()">Close</button>
-                        <button class="btn btn-danger" onclick="createNewHashWithWarning()">
-                            Create New ID
-                        </button>
-                        <button class="btn btn-primary" onclick="switchHash()">
-                            Switch ID
-                        </button>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h6 class="card-title mb-0 fw-semibold">
+                                <i class="bi bi-arrow-left-right text-warning me-2"></i>
+                                Switch to Different Sync ID
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning border-0 mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <small>Warning: This will replace all your local data</small>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-key text-muted"></i>
+                                </span>
+                                <input type="text" id="switchHashInput" class="form-control border-start-0" 
+                                       placeholder="Enter existing Sync ID" maxlength="20"
+                                       style="text-transform: uppercase; letter-spacing: 1px;">
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light border-0">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-outline-secondary" onclick="closeHashModal()">
+                                    <i class="bi bi-x-lg me-1"></i>Close
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="createNewHashWithWarning()">
+                                    <i class="bi bi-plus-circle me-1"></i>Create New ID
+                                </button>
+                                <button class="btn btn-primary" onclick="switchHash()">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Switch ID
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 `;
             } else {
                 // User has no hash
                 content.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="color: #666;">No Sync ID Set</h3>
-                        <p style="color: #666; margin-top: 10px;">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-cloud-slash text-muted display-4 mb-3"></i>
+                        <h4 class="text-muted fw-semibold mb-2">No Sync ID Set</h4>
+                        <p class="text-muted small mb-0">
                             Create a new Sync ID or enter an existing one to enable cloud sync
                         </p>
                     </div>
                     
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; text-align: center;">
-                            <h4 style="color: #0369a1; margin-bottom: 10px;">New User?</h4>
-                            <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">
-                                Create a new Sync ID to start syncing your boards
-                            </p>
-                            <button class="btn btn-primary" onclick="createNewHash()" style="width: 100%;">
-                                🆕 Create New Sync ID
-                            </button>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm bg-primary-subtle">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-person-plus text-primary fs-2 mb-3"></i>
+                                    <h5 class="card-title text-primary fw-semibold mb-2">New User?</h5>
+                                    <p class="card-text text-primary-emphasis small mb-3">
+                                        Create a new Sync ID to start syncing your boards across devices
+                                    </p>
+                                    <button class="btn btn-primary btn-lg w-100" onclick="createNewHash()">
+                                        <i class="bi bi-plus-circle me-2"></i>Create New Sync ID
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div style="background: #fef3c7; padding: 20px; border-radius: 8px;">
-                            <h4 style="color: #92400e; margin-bottom: 10px;">Have an existing ID?</h4>
-                            <p style="color: #666; margin-bottom: 10px; font-size: 0.9rem;">
-                                Enter your Sync ID to download your boards from the cloud
-                            </p>
-                            <input type="text" id="activateHashInput" placeholder="Enter your Sync ID" 
-                                   style="text-transform: uppercase; margin-bottom: 10px;" maxlength="20">
-                            <button class="btn btn-primary" onclick="activateHash()" style="width: 100%;">
-                                🔄 Activate Existing ID
-                            </button>
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm bg-warning-subtle">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-key text-warning fs-4 me-2"></i>
+                                        <h5 class="card-title text-warning-emphasis fw-semibold mb-0">Have an existing ID?</h5>
+                                    </div>
+                                    <p class="card-text text-warning-emphasis small mb-3">
+                                        Enter your Sync ID to download your boards from the cloud
+                                    </p>
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="bi bi-hash text-muted"></i>
+                                        </span>
+                                        <input type="text" id="activateHashInput" class="form-control border-start-0" 
+                                               placeholder="Enter your Sync ID" maxlength="20"
+                                               style="text-transform: uppercase; letter-spacing: 1px;">
+                                    </div>
+                                    <button class="btn btn-warning btn-lg w-100" onclick="activateHash()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Activate Existing ID
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="modal-actions" style="margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="closeHashModal()" style="width: 100%;">Cancel</button>
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-secondary" onclick="closeHashModal()">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </button>
                     </div>
                 `;
             }
             
-            modal.style.display = 'block';
+            // Show modal using Bootstrap
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+            
+            // Initialize tooltips after modal content is rendered
+            setTimeout(() => {
+                const tooltipTriggerList = [].slice.call(modal.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }, 100);
         }
 
         function closeHashModal() {
-            document.getElementById('hashModal').style.display = 'none';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('hashModal'));
+            if (modal) {
+                modal.hide();
+            }
         }
 
-        function copyHashToClipboard() {
+        async function copyHashToClipboard() {
             const hash = syncManager.getHash();
-            navigator.clipboard.writeText(hash).then(() => {
-                syncManager.showSyncStatus('Sync ID copied to clipboard', 'success');
-            });
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            
+            try {
+                await navigator.clipboard.writeText(hash);
+                
+                // Show success state
+                button.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copied!';
+                button.classList.add('btn-success');
+                button.classList.remove('btn-outline-primary');
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-primary');
+                    button.disabled = false;
+                }, 2000);
+                
+                // Show toast notification
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-bg-success border-0 position-fixed';
+                toast.style.top = '20px';
+                toast.style.right = '20px';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-check-circle me-2"></i>Sync ID copied to clipboard!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+                bsToast.show();
+                
+                toast.addEventListener('hidden.bs.toast', () => {
+                    document.body.removeChild(toast);
+                });
+                
+            } catch (error) {
+                // Show error state
+                button.innerHTML = '<i class="bi bi-x-lg me-1"></i>Error';
+                button.classList.add('btn-danger');
+                button.classList.remove('btn-outline-primary');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-outline-primary');
+                }, 2000);
+            }
         }
 
         async function createNewHash() {
-            const hash = await syncManager.createNewHash();
-            if (hash) {
-                closeHashModal();
-                updateSyncUI();
+            const button = event.target;
+            const originalContent = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+            button.disabled = true;
+            
+            try {
+                const hash = await syncManager.createNewHash();
+                if (hash) {
+                    button.innerHTML = '<i class="bi bi-check-lg me-2"></i>Created!';
+                    button.classList.add('btn-success');
+                    button.classList.remove('btn-primary');
+                    
+                    setTimeout(() => {
+                        closeHashModal();
+                        updateSyncUI();
+                    }, 1000);
+                }
+            } catch (error) {
+                button.innerHTML = '<i class="bi bi-x-lg me-2"></i>Error';
+                button.classList.add('btn-danger');
+                button.classList.remove('btn-primary');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-primary');
+                    button.disabled = false;
+                }, 2000);
             }
         }
 
@@ -1211,16 +1453,46 @@
         async function activateHash() {
             const input = document.getElementById('activateHashInput');
             const hash = input.value.trim();
+            const button = event.target;
+            const originalContent = button.innerHTML;
             
             if (!hash) {
-                syncManager.showSyncStatus('Please enter a Sync ID', 'warning');
+                input.classList.add('is-invalid');
+                setTimeout(() => input.classList.remove('is-invalid'), 3000);
                 return;
             }
             
-            const success = await syncManager.activateExistingHash(hash);
-            if (success) {
-                closeHashModal();
-                updateSyncUI();
+            // Show loading state
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Activating...';
+            button.disabled = true;
+            input.disabled = true;
+            
+            try {
+                const success = await syncManager.activateExistingHash(hash);
+                if (success) {
+                    button.innerHTML = '<i class="bi bi-check-lg me-2"></i>Activated!';
+                    button.classList.add('btn-success');
+                    button.classList.remove('btn-warning');
+                    
+                    setTimeout(() => {
+                        closeHashModal();
+                        updateSyncUI();
+                    }, 1000);
+                }
+            } catch (error) {
+                button.innerHTML = '<i class="bi bi-x-lg me-2"></i>Error';
+                button.classList.add('btn-danger');
+                button.classList.remove('btn-warning');
+                input.classList.add('is-invalid');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-warning');
+                    button.disabled = false;
+                    input.disabled = false;
+                    input.classList.remove('is-invalid');
+                }, 2000);
             }
         }
 
@@ -1241,17 +1513,60 @@
         }
 
         // Sync functionality
-        function handleSync() {
+        async function handleSync() {
             if (!syncManager.hasHash()) {
                 openHashModal();
                 return;
             }
-            syncManager.syncData(true);
+            
+            const syncButton = document.getElementById('syncButton');
+            const syncIcon = syncButton.querySelector('i');
+            const syncText = syncButton.querySelector('span');
+            
+            // Show loading state
+            syncButton.classList.add('syncing');
+            syncButton.disabled = true;
+            syncIcon.className = 'bi bi-arrow-clockwise';
+            syncText.textContent = 'Syncing...';
+            
+            try {
+                await syncManager.syncData(true);
+                
+                // Show success state briefly
+                syncButton.classList.remove('syncing');
+                syncButton.classList.add('success');
+                syncIcon.className = 'bi bi-check-lg';
+                syncText.textContent = 'Synced!';
+                
+                setTimeout(() => {
+                    // Reset to normal state
+                    syncButton.classList.remove('success');
+                    syncButton.disabled = false;
+                    syncIcon.className = 'bi bi-arrow-repeat';
+                    syncText.textContent = 'Sync Now';
+                    updateSyncUI();
+                }, 1500);
+                
+            } catch (error) {
+                // Show error state
+                syncButton.classList.remove('syncing');
+                syncButton.classList.add('error');
+                syncButton.disabled = false;
+                syncIcon.className = 'bi bi-exclamation-triangle-fill';
+                syncText.textContent = 'Error';
+                
+                setTimeout(() => {
+                    syncButton.classList.remove('error');
+                    syncIcon.className = 'bi bi-arrow-repeat';
+                    syncText.textContent = 'Sync Now';
+                }, 2000);
+            }
         }
 
         // Update sync UI based on hash status
         function updateSyncUI() {
             const syncButton = document.getElementById('syncButton');
+            const hashButton = document.querySelector('.hash-button');
             const hashButtonText = document.getElementById('hashButtonText');
             const syncInfo = document.getElementById('syncInfo');
             const currentHashDisplay = document.getElementById('currentHashDisplay');
@@ -1259,7 +1574,8 @@
             
             if (syncManager.hasHash()) {
                 syncButton.disabled = false;
-                hashButtonText.textContent = 'Sync ID';
+                hashButton.classList.add('has-id');
+                hashButtonText.textContent = 'Sync Ready';
                 syncInfo.style.display = 'flex';
                 currentHashDisplay.textContent = syncManager.getHash().toUpperCase();
                 
@@ -1270,6 +1586,7 @@
                 }
             } else {
                 syncButton.disabled = true;
+                hashButton.classList.remove('has-id');
                 hashButtonText.textContent = 'Setup Sync';
                 syncInfo.style.display = 'none';
             }
@@ -1293,13 +1610,17 @@
             syncManager.syncData(false);
         }
 
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const hashModal = document.getElementById('hashModal');
-            if (e.target === hashModal) {
-                closeHashModal();
-            }
+        // Initialize tooltips and handle modal events
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
