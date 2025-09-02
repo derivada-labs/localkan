@@ -18,6 +18,14 @@ fs.ensureDirSync(DATA_DIR);
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+// Serve static files from the root directory
+app.use(express.static(__dirname));
+
+// Root route - serve the main boards page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'boards.html'));
+});
+
 // Validate and sanitize hash
 function sanitizeHash(hash) {
     if (!hash || typeof hash !== 'string') {

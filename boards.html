@@ -467,20 +467,66 @@
         }
 
         .empty-state {
+            grid-column: 1 / -1;
             text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.8);
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 240px;
         }
 
         .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
         }
 
         .empty-state p {
-            font-size: 1rem;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 400px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            color: rgba(255, 255, 255, 0.6);
             margin-bottom: 20px;
+        }
+
+        .empty-state-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .empty-state-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            color: white;
         }
 
         /* Color Picker Styles */
@@ -737,6 +783,49 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal fade" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="confirmModalLabel">
+                        <i class="bi bi-question-circle-fill text-warning me-2"></i>
+                        Confirm Action
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage">Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmModalButton">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="notificationModalLabel">
+                        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                        Information
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="notificationModalMessage">Notification message</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="sync.js"></script>
     <script>
         // Global variables
@@ -744,6 +833,47 @@
         let currentEditBoardId = null;
         let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
         let selectedWorkspaceColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default workspace color
+
+        // Modal helper functions
+        function showConfirmModal(title, message, onConfirm, confirmButtonText = 'Confirm', confirmButtonClass = 'btn-danger') {
+            const modal = document.getElementById('confirmModal');
+            const titleElement = document.getElementById('confirmModalLabel');
+            const messageElement = document.getElementById('confirmModalMessage');
+            const buttonElement = document.getElementById('confirmModalButton');
+            
+            titleElement.innerHTML = `<i class="bi bi-question-circle-fill text-warning me-2"></i>${title}`;
+            messageElement.innerHTML = message;
+            buttonElement.textContent = confirmButtonText;
+            buttonElement.className = `btn ${confirmButtonClass}`;
+            
+            buttonElement.onclick = function() {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                bootstrapModal.hide();
+                onConfirm();
+            };
+            
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+        }
+
+        function showNotificationModal(title, message, type = 'info') {
+            const modal = document.getElementById('notificationModal');
+            const titleElement = document.getElementById('notificationModalLabel');
+            const messageElement = document.getElementById('notificationModalMessage');
+            
+            const icons = {
+                'info': 'bi-info-circle-fill text-primary',
+                'success': 'bi-check-circle-fill text-success',
+                'warning': 'bi-exclamation-triangle-fill text-warning',
+                'error': 'bi-x-circle-fill text-danger'
+            };
+            
+            titleElement.innerHTML = `<i class="bi ${icons[type] || icons.info} me-2"></i>${title}`;
+            messageElement.innerHTML = message;
+            
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+        }
 
         // Color themes
         const colorThemes = [
@@ -934,10 +1064,16 @@
             if (boards.length === 0) {
                 boardsGrid.innerHTML = `
                     <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-kanban"></i>
+                        </div>
                         <h3>No boards yet</h3>
                         <p>Create your first board to get started with organizing your tasks!</p>
+                        <button class="empty-state-button" onclick="openCreateBoardModal()">
+                            <i class="bi bi-plus-circle-fill"></i>
+                            Create new board
+                        </button>
                     </div>
-                    ${createNewBoardCardHTML()}
                 `;
             } else {
                 const boardsHTML = boards.map(createBoardCardHTML).join('');
@@ -977,16 +1113,21 @@
             const board = boards.find(b => b.id === boardId);
             if (!board) return;
 
-            if (confirm(`Are you sure you want to delete "${board.title}"?\n\nThis will also delete all cards in this board. This action cannot be undone.`)) {
-                // Remove board
-                boards = boards.filter(b => b.id !== boardId);
-                
-                // Remove board's cards
-                localStorage.removeItem(`kanbanCards_${boardId}`);
-                
-                saveBoards();
-                renderBoards();
-            }
+            showConfirmModal(
+                'Delete Board',
+                `Are you sure you want to delete "${board.title}"?<br><br>This will also delete all cards in this board. This action cannot be undone.`,
+                function() {
+                    // Remove board
+                    boards = boards.filter(b => b.id !== boardId);
+                    
+                    // Remove board's cards
+                    localStorage.removeItem(`kanbanCards_${boardId}`);
+                    
+                    saveBoards();
+                    renderBoards();
+                },
+                'Delete Board'
+            );
         }
 
         // Edit board (opens modal with existing data)
@@ -1041,7 +1182,7 @@
             // Cleanup
             URL.revokeObjectURL(link.href);
             
-            alert(`Successfully exported ${boards.length} boards with all their cards!`);
+            showNotificationModal('Export Successful', `Successfully exported ${boards.length} boards with all their cards!`, 'success');
         }
 
         function triggerImport() {
@@ -1063,64 +1204,23 @@
                     }
 
                     // Ask user about merge vs replace
-                    const shouldReplace = confirm(
-                        `Import ${importData.boards.length} boards?\n\n` +
-                        `• Choose "OK" to ADD these boards to your existing ones\n` +
-                        `• Choose "Cancel" to abort the import\n\n` +
-                        `Note: Existing boards will not be affected.`
+                    showConfirmModal(
+                        'Import Boards',
+                        `Import ${importData.boards.length} boards?<br><br>` +
+                        `• This will ADD these boards to your existing ones<br>` +
+                        `• Your existing boards will not be affected<br><br>` +
+                        `Continue with import?`,
+                        function() {
+                            // Proceed with import (move the import logic here)
+                            proceedWithImport(importData, event);
+                        },
+                        'Import Boards',
+                        'btn-primary'
                     );
-
-                    if (!shouldReplace) {
-                        // Reset file input
-                        event.target.value = '';
-                        return;
-                    }
-
-                    // Generate new IDs to avoid conflicts
-                    const idMapping = {};
-                    let importedBoardsCount = 0;
-                    let importedCardsCount = 0;
-
-                    importData.boards.forEach(board => {
-                        const newBoardId = generateId();
-                        idMapping[board.id] = newBoardId;
-
-                        // Create new board with new ID
-                        const newBoard = {
-                            ...board,
-                            id: newBoardId,
-                            title: board.title + ' (Imported)',
-                            updatedAt: new Date().toISOString()
-                        };
-
-                        boards.push(newBoard);
-                        importedBoardsCount++;
-
-                        // Import cards for this board
-                        const boardCards = importData.cards[board.id] || [];
-                        const newCards = boardCards.map(card => ({
-                            ...card,
-                            id: generateId(),
-                            updatedAt: new Date().toISOString()
-                        }));
-
-                        localStorage.setItem(`kanbanCards_${newBoardId}`, JSON.stringify(newCards));
-                        importedCardsCount += newCards.length;
-                    });
-
-                    // Save updated boards
-                    saveBoards();
-                    renderBoards();
-
-                    alert(
-                        `Successfully imported!\n\n` +
-                        `• ${importedBoardsCount} boards\n` +
-                        `• ${importedCardsCount} cards\n\n` +
-                        `Imported boards have "(Imported)" suffix to avoid name conflicts.`
-                    );
+                    return; // Exit here, import logic will be called from modal
 
                 } catch (error) {
-                    alert('Error importing file: ' + error.message + '\n\nPlease make sure you selected a valid Kanban export file.');
+                    showNotificationModal('Import Error', 'Error importing file: ' + error.message + '<br><br>Please make sure you selected a valid Kanban export file.', 'error');
                 } finally {
                     // Reset file input
                     event.target.value = '';
@@ -1128,6 +1228,59 @@
             };
 
             reader.readAsText(file);
+        }
+
+        // Separate function to handle the actual import logic
+        function proceedWithImport(importData, event) {
+            try {
+                // Generate new IDs to avoid conflicts
+                const idMapping = {};
+                let importedBoardsCount = 0;
+                let importedCardsCount = 0;
+
+                importData.boards.forEach(board => {
+                    const newBoardId = generateId();
+                    idMapping[board.id] = newBoardId;
+
+                    // Create new board with new ID
+                    const newBoard = {
+                        ...board,
+                        id: newBoardId,
+                        title: board.title + ' (Imported)',
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    boards.push(newBoard);
+                    importedBoardsCount++;
+
+                    // Import cards for this board
+                    const boardCards = importData.cards[board.id] || [];
+                    const newCards = boardCards.map(card => ({
+                        ...card,
+                        id: generateId(),
+                        updatedAt: new Date().toISOString()
+                    }));
+
+                    localStorage.setItem(`kanbanCards_${newBoardId}`, JSON.stringify(newCards));
+                    importedCardsCount += newCards.length;
+                });
+
+                // Save updated boards
+                saveBoards();
+                renderBoards();
+
+                showNotificationModal('Import Successful', 
+                    `Successfully imported!<br><br>` +
+                    `• ${importedBoardsCount} boards<br>` +
+                    `• ${importedCardsCount} cards<br><br>` +
+                    `Imported boards have "(Imported)" suffix to avoid name conflicts.`, 'success');
+
+            } catch (error) {
+                showNotificationModal('Import Error', 'Error importing file: ' + error.message + '<br><br>Please make sure you selected a valid Kanban export file.', 'error');
+            } finally {
+                // Reset file input
+                event.target.value = '';
+            }
         }
 
         // Form submission
@@ -1441,13 +1594,19 @@
         }
 
         async function createNewHashWithWarning() {
-            if (confirm('Creating a new Sync ID will start a fresh sync workspace.\n\nYour current data will remain under the existing ID.\n\nContinue?')) {
-                const hash = await syncManager.createNewHash();
-                if (hash) {
-                    closeHashModal();
-                    updateSyncUI();
-                }
-            }
+            showConfirmModal(
+                'Create New Sync ID',
+                'Creating a new Sync ID will start a fresh sync workspace.<br><br>Your current data will remain under the existing ID.<br><br>Continue?',
+                async function() {
+                    const hash = await syncManager.createNewHash();
+                    if (hash) {
+                        closeHashModal();
+                        updateSyncUI();
+                    }
+                },
+                'Create New ID',
+                'btn-warning'
+            );
         }
 
         async function activateHash() {

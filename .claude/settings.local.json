@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start boards.html)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
