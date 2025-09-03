@@ -394,76 +394,31 @@
             letter-spacing: -0.02em;
         }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
+        /* Custom form styling that enhances Bootstrap */
         .form-group textarea {
             resize: vertical;
             min-height: 80px;
         }
 
-        /* Remove old modal-actions as we're using Bootstrap */
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-
+        /* Custom button colors that match our theme */
         .btn-primary {
             background: #667eea;
-            color: white;
+            border-color: #667eea;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover, .btn-primary:focus {
             background: #5a6fd8;
-        }
-
-        .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #d0d0d0;
+            border-color: #5a6fd8;
         }
 
         .btn-danger {
             background: #ff4757;
-            color: white;
+            border-color: #ff4757;
         }
 
-        .btn-danger:hover {
+        .btn-danger:hover, .btn-danger:focus {
             background: #ff3838;
+            border-color: #ff3838;
         }
 
         .empty-state {
@@ -696,70 +651,81 @@
     </div>
 
     <!-- Create Board Modal -->
-    <div id="boardModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title" id="modalTitle">Create New Board</span>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            <form id="boardForm">
-                <div class="form-group">
-                    <label for="boardTitle">Board Title *</label>
-                    <input type="text" id="boardTitle" required placeholder="Enter board title...">
+    <div id="boardModal" class="modal fade" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="modalTitle">Create New Board</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="form-group">
-                    <label for="boardDescription">Description</label>
-                    <textarea id="boardDescription" placeholder="What is this board about? (optional)"></textarea>
+                <div class="modal-body">
+                    <form id="boardForm">
+                        <div class="form-group mb-3">
+                            <label for="boardTitle" class="form-label">Board Title *</label>
+                            <input type="text" id="boardTitle" class="form-control" required placeholder="Enter board title...">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="boardDescription" class="form-label">Description</label>
+                            <textarea id="boardDescription" class="form-control" placeholder="What is this board about? (optional)"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Background Color</label>
+                            <div class="color-picker-grid" id="colorPicker">
+                                <!-- Color options will be rendered here -->
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>Background Color</label>
-                    <div class="color-picker-grid" id="colorPicker">
-                        <!-- Color options will be rendered here -->
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBoardBtn" onclick="deleteBoardFromModal()" style="display: none;">Delete Board</button>
-                    <button type="submit" class="btn btn-primary" id="saveBoardBtn">Create Board</button>
+                    <button type="button" class="btn btn-primary" id="saveBoardBtn" onclick="submitBoardForm()">Create Board</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Workspace Settings Modal -->
-    <div id="workspaceModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">Workspace Settings</span>
-                <span class="close" onclick="closeWorkspaceModal()">&times;</span>
+    <div id="workspaceModal" class="modal fade" tabindex="-1" aria-labelledby="workspaceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="workspaceModalLabel">
+                        <i class="bi bi-briefcase-fill text-primary me-2"></i>
+                        Workspace Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="workspaceForm">
+                        <div class="form-group mb-3">
+                            <label for="workspaceTitle" class="form-label">Workspace Name *</label>
+                            <input type="text" id="workspaceTitle" class="form-control" required placeholder="Enter workspace name...">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Background Color</label>
+                            <div class="color-picker-grid" id="workspaceColorPicker">
+                                <!-- Color options will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Workspace Management</label>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-primary flex-fill" onclick="exportBoards()">
+                                    <i class="bi bi-download me-2"></i>Export Boards
+                                </button>
+                                <button type="button" class="btn btn-outline-primary flex-fill" onclick="triggerImport()">
+                                    <i class="bi bi-upload me-2"></i>Import Boards
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitWorkspaceForm()">Update Workspace</button>
+                </div>
             </div>
-            <form id="workspaceForm">
-                <div class="form-group">
-                    <label for="workspaceTitle">Workspace Name *</label>
-                    <input type="text" id="workspaceTitle" required placeholder="Enter workspace name...">
-                </div>
-                <div class="form-group">
-                    <label>Background Color</label>
-                    <div class="color-picker-grid" id="workspaceColorPicker">
-                        <!-- Color options will be rendered here -->
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Workspace Management</label>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button type="button" class="btn btn-outline-primary" onclick="exportBoards()" style="flex: 1;">
-                            <i class="bi bi-download me-2"></i>Export Boards
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" onclick="triggerImport()" style="flex: 1;">
-                            <i class="bi bi-upload me-2"></i>Import Boards
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeWorkspaceModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Workspace</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -1050,11 +1016,16 @@
             document.getElementById('workspaceTitle').value = workspaceSettings.name;
             selectedWorkspaceColor = workspaceSettings.backgroundColor;
             renderWorkspaceColorPicker(selectedWorkspaceColor);
-            document.getElementById('workspaceModal').style.display = 'block';
+            
+            const modal = new bootstrap.Modal(document.getElementById('workspaceModal'));
+            modal.show();
         }
 
         function closeWorkspaceModal() {
-            document.getElementById('workspaceModal').style.display = 'none';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('workspaceModal'));
+            if (modal) {
+                modal.hide();
+            }
         }
 
         // Render all boards
@@ -1091,11 +1062,16 @@
             document.getElementById('deleteBoardBtn').style.display = 'none';
             document.getElementById('saveBoardBtn').textContent = 'Create Board';
             renderColorPicker(selectedBackgroundColor);
-            document.getElementById('boardModal').style.display = 'block';
+            
+            const modal = new bootstrap.Modal(document.getElementById('boardModal'));
+            modal.show();
         }
 
         function closeModal() {
-            document.getElementById('boardModal').style.display = 'none';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('boardModal'));
+            if (modal) {
+                modal.hide();
+            }
             currentEditBoardId = null;
         }
 
@@ -1143,7 +1119,9 @@
             document.getElementById('deleteBoardBtn').style.display = 'inline-block';
             document.getElementById('saveBoardBtn').textContent = 'Update Board';
             renderColorPicker(selectedBackgroundColor);
-            document.getElementById('boardModal').style.display = 'block';
+            
+            const modal = new bootstrap.Modal(document.getElementById('boardModal'));
+            modal.show();
         }
 
         // Delete board from modal
@@ -1152,6 +1130,52 @@
                 deleteBoard(currentEditBoardId);
                 closeModal();
             }
+        }
+
+        // New form submission functions for Bootstrap modals
+        function submitBoardForm() {
+            const title = document.getElementById('boardTitle').value.trim();
+            const description = document.getElementById('boardDescription').value.trim();
+            
+            if (!title) return;
+
+            if (currentEditBoardId) {
+                // Update existing board
+                const boardIndex = boards.findIndex(board => board.id === currentEditBoardId);
+                if (boardIndex !== -1) {
+                    boards[boardIndex].title = title;
+                    boards[boardIndex].description = description;
+                    boards[boardIndex].backgroundColor = selectedBackgroundColor;
+                    boards[boardIndex].updatedAt = new Date().toISOString();
+                }
+            } else {
+                // Create new board
+                const newBoard = {
+                    id: generateId(),
+                    title: title,
+                    description: description,
+                    backgroundColor: selectedBackgroundColor,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                boards.push(newBoard);
+            }
+
+            saveBoards();
+            renderBoards();
+            closeModal();
+        }
+
+        function submitWorkspaceForm() {
+            const name = document.getElementById('workspaceTitle').value.trim();
+            
+            if (!name) return;
+
+            // Update workspace
+            saveWorkspaceSettings(name, selectedWorkspaceColor);
+            document.getElementById('workspaceName').textContent = name;
+            
+            closeWorkspaceModal();
         }
 
         // Import/Export functionality
@@ -1283,76 +1307,22 @@
             }
         }
 
-        // Form submission
+        // Form submission (keeping for Enter key support)
         document.getElementById('boardForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const title = document.getElementById('boardTitle').value.trim();
-            const description = document.getElementById('boardDescription').value.trim();
-            
-            if (!title) return;
-
-            if (currentEditBoardId) {
-                // Update existing board
-                const boardIndex = boards.findIndex(board => board.id === currentEditBoardId);
-                if (boardIndex !== -1) {
-                    boards[boardIndex].title = title;
-                    boards[boardIndex].description = description;
-                    boards[boardIndex].backgroundColor = selectedBackgroundColor;
-                    boards[boardIndex].updatedAt = new Date().toISOString();
-                }
-            } else {
-                // Create new board
-                const newBoard = {
-                    id: generateId(),
-                    title: title,
-                    description: description,
-                    backgroundColor: selectedBackgroundColor,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                boards.push(newBoard);
-            }
-
-            saveBoards();
-            renderBoards();
-            closeModal();
+            submitBoardForm();
         });
 
-        // Workspace form submission
+        // Workspace form submission (keeping for Enter key support) 
         document.getElementById('workspaceForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const name = document.getElementById('workspaceTitle').value.trim();
-            
-            if (!name) return;
-
-            // Update workspace
-            saveWorkspaceSettings(name, selectedWorkspaceColor);
-            document.getElementById('workspaceName').textContent = name;
-            
-            closeWorkspaceModal();
+            submitWorkspaceForm();
         });
 
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const boardModal = document.getElementById('boardModal');
-            const workspaceModal = document.getElementById('workspaceModal');
-            
-            if (e.target === boardModal) {
-                closeModal();
-            }
-            if (e.target === workspaceModal) {
-                closeWorkspaceModal();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeWorkspaceModal();
-            }
+        // Bootstrap handles modal backdrop and ESC key automatically
+        // Keeping event listeners for cleanup when modals are closed
+        document.getElementById('boardModal').addEventListener('hidden.bs.modal', function() {
+            currentEditBoardId = null;
         });
 
         // Hash Management Modal
