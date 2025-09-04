@@ -36,7 +36,7 @@ A beautiful, responsive Kanban board application with multi-user cloud sync capa
 Deploy to Vercel in 30 seconds:
 
 ```bash
-npx vercel
+npm vercel
 ```
 
 Your app is now live! Works immediately with demo mode (data resets periodically).
@@ -52,7 +52,7 @@ cd localkan
 npm install
 
 # Start local server
-npm run dev
+npm run start
 ```
 
 Open `http://localhost:3001` in your browser.
@@ -179,7 +179,7 @@ For local development with Vercel KV:
 
 ```bash
 # Pull environment variables from Vercel
-vercel env pull .env.local
+vercel env pull .env
 
 # Run with Vercel CLI
 npx vercel dev
@@ -342,12 +342,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Inter Font](https://rsms.me/inter/) for typography
 - [Vercel](https://vercel.com) for hosting and infrastructure
 - [Upstash Redis](https://upstash.com) for KV storage
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/your-username/localkan/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/localkan/discussions)
-- **Email**: your-email@domain.com
 
 ---
 
