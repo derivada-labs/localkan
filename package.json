@@ -1,7 +1,7 @@
 {
-  "name": "kanban-todo-app",
+  "name": "localkan",
   "version": "2.0.0",
-  "description": "Kanban Todo App with Multi-User Cloud Sync",
+  "description": "Multi-User Kanban Todo App with Cloud Sync - Beautiful, responsive, and collaborative project management",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -9,7 +9,13 @@
     "start": "node server.js",
     "vercel-dev": "vercel dev",
     "vercel-build": "echo 'No build required'",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "test": "echo 'Open test/test-sync.html in browser for sync testing'",
+    "test:multiuser": "echo 'Open test/test-multiuser.html in browser for multi-user testing'",
+    "test:kv": "node test/test-kv.js",
+    "serve": "npx http-server public -p 8080 -o",
+    "lint": "echo 'No linting configured - using vanilla JS'",
+    "format": "echo 'No formatting configured - using vanilla JS'"
   },
   "dependencies": {
     "@upstash/redis": "^1.35.3",

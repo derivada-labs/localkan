@@ -29,12 +29,26 @@ fs.ensureDirSync(DATA_DIR);
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files from the root directory
-app.use(express.static(__dirname));
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Specific routes for boards and board directories
+app.use('/boards', express.static(path.join(__dirname, 'public', 'boards')));
+app.use('/board', express.static(path.join(__dirname, 'public', 'board')));
 
 // Root route - serve the main boards page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'boards.html'));
+    res.sendFile(path.join(__dirname, 'public', 'boards', 'boards.html'));
+});
+
+// Boards route - serve the boards page
+app.get('/boards', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'boards', 'boards.html'));
+});
+
+// Board route - serve the individual board page
+app.get('/board', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'board', 'board.html'));
 });
 
 // Validate and sanitize hash
