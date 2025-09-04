@@ -1,4 +1,10 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis client
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+});
 
 // Validate and sanitize hash
 function sanitizeHash(hash) {
@@ -41,26 +47,24 @@ export default async function handler(req, res) {
             });
         }
 
-        // Check if hash exists in Vercel KV
-        // If KV is not configured, this will throw an error and we'll use fallback
-        const data = await kv.get(`sync:${sanitizedHash}`);
+        // Check if hash exists in Redis
+        const exists = await redis.exists(`sync:${sanitizedHash}`);
         
         res.status(200).json({
-            exists: data !== null,
+            exists: exists === 1,
             hash: sanitizedHash,
             mode: 'production'
         });
     } catch (error) {
         console.error('Error checking hash:', error);
         
-        // If KV is not configured, always return true in demo mode
-        // This prevents "Sync ID not found" errors when KV isn't set up
-        if (error.message && (error.message.includes('KV_') || error.message.includes('No KV'))) {
+        // If Redis is not configured, always return true in demo mode
+        if (error.message && (error.message.includes('Redis') || error.message.includes('connection'))) {
             return res.status(200).json({
                 exists: true, // Always true in demo mode to allow testing
                 hash: req.query.hash,
                 mode: 'demo',
-                warning: 'Demo mode - Set up Vercel KV for persistence'
+                warning: 'Demo mode - Redis connection failed'
             });
         }
         

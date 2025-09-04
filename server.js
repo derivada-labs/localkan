@@ -3,9 +3,20 @@ import cors from 'cors';
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { Redis } from '@upstash/redis';
+
+// Load environment variables
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Redis client
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,12 +52,28 @@ function sanitizeHash(hash) {
 }
 
 // Health check endpoint
-app.get('/api/sync/status', (req, res) => {
-    res.json({ 
-        status: 'online', 
-        serverTime: Date.now(),
-        version: '2.0.0' // Updated version for multi-user support
-    });
+app.get('/api/sync/status', async (req, res) => {
+    try {
+        // Test Redis connection
+        const pingResult = await redis.ping();
+        
+        res.json({ 
+            status: 'online', 
+            serverTime: Date.now(),
+            version: '2.0.0', // Updated version for multi-user support
+            storage: 'redis',
+            redis: pingResult === 'PONG' ? 'connected' : 'disconnected'
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: 'error', 
+            serverTime: Date.now(),
+            version: '2.0.0',
+            storage: 'redis',
+            redis: 'disconnected',
+            error: error.message
+        });
+    }
 });
 
 // Check if hash exists
@@ -61,11 +88,11 @@ app.get('/api/sync/check/:hash', async (req, res) => {
             });
         }
         
-        const dataPath = path.join(DATA_DIR, `${hash}.json`);
-        const exists = await fs.pathExists(dataPath);
+        // Check if data exists in Redis
+        const exists = await redis.exists(`sync:${hash}`);
         
         res.json({ 
-            exists,
+            exists: exists === 1,
             hash 
         });
     } catch (error) {
@@ -83,10 +110,10 @@ app.get('/api/sync/data/:hash', async (req, res) => {
             return res.status(400).json({ error: 'Invalid hash format' });
         }
         
-        const dataPath = path.join(DATA_DIR, `${hash}.json`);
+        // Get data from Redis
+        const syncData = await redis.get(`sync:${hash}`);
         
-        // Check if file exists
-        if (!await fs.pathExists(dataPath)) {
+        if (!syncData) {
             // Return empty data with zero timestamp
             return res.json({
                 timestamp: 0,
@@ -99,10 +126,10 @@ app.get('/api/sync/data/:hash', async (req, res) => {
             });
         }
         
-        // Read and return existing data
-        const syncData = await fs.readJson(dataPath);
-        syncData.hash = hash; // Include hash in response
-        res.json(syncData);
+        // Return existing data
+        const data = typeof syncData === 'string' ? JSON.parse(syncData) : syncData;
+        data.hash = hash; // Include hash in response
+        res.json(data);
     } catch (error) {
         console.error('Error reading sync data:', error);
         res.status(500).json({ error: 'Failed to read sync data' });
@@ -125,24 +152,24 @@ app.post('/api/sync/data/:hash', async (req, res) => {
             return res.status(400).json({ error: 'Missing timestamp or data' });
         }
         
-        const dataPath = path.join(DATA_DIR, `${hash}.json`);
-        
         // Check if existing data is newer
-        if (await fs.pathExists(dataPath)) {
-            const existingData = await fs.readJson(dataPath);
+        const existingData = await redis.get(`sync:${hash}`);
+        
+        if (existingData) {
+            const parsed = typeof existingData === 'string' ? JSON.parse(existingData) : existingData;
             
-            if (existingData.timestamp > timestamp) {
+            if (parsed.timestamp > timestamp) {
                 // Server data is newer, don't update
                 return res.json({
                     success: false,
                     message: 'Server data is newer',
-                    serverTimestamp: existingData.timestamp,
+                    serverTimestamp: parsed.timestamp,
                     clientTimestamp: timestamp
                 });
             }
         }
         
-        // Save new data
+        // Save new data to Redis
         const syncData = {
             timestamp,
             data,
@@ -150,7 +177,7 @@ app.post('/api/sync/data/:hash', async (req, res) => {
             lastUpdated: new Date().toISOString()
         };
         
-        await fs.writeJson(dataPath, syncData, { spaces: 2 });
+        await redis.set(`sync:${hash}`, JSON.stringify(syncData));
         
         res.json({
             success: true,
@@ -178,8 +205,16 @@ app.post('/api/sync/data', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`✅ Sync server running on http://localhost:${PORT}`);
-    console.log(`📁 Data directory: ${DATA_DIR}`);
+    console.log(`☁️  Using Upstash Redis for data storage`);
     console.log(`🔐 Multi-user mode enabled with hash-based isolation`);
+    
+    // Test Redis connection
+    try {
+        await redis.ping();
+        console.log(`🟢 Redis connection successful`);
+    } catch (error) {
+        console.error(`🔴 Redis connection failed:`, error.message);
+    }
 });
