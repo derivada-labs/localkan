@@ -128,7 +128,7 @@ function createBoardCardHTML(board) {
             <div class="board-header">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-kanban"></i>
-                    <div class="board-title mb-0">${board.title}</div>
+                    <div class="board-title mb-0" title="${board.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}">${board.title}</div>
                 </div>
             </div>
             <div class="board-description">${board.description || 'No description provided'}</div>
@@ -299,9 +299,21 @@ function deleteBoard(boardId) {
     const board = boards.find(b => b.id === boardId);
     if (!board) return;
 
+    // Escape HTML characters in board title to avoid injection
+    const safeTitle = (board.title || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    // Decide if we should visually truncate (for extremely long continuous strings >120 chars)
+    const shouldTruncate = safeTitle.length > 160; // arbitrary cutoff for display
+    const displayTitle = shouldTruncate ? safeTitle.slice(0, 160) : safeTitle;
+
     showConfirmModal(
         'Delete Board',
-        `Are you sure you want to delete "${board.title}"?<br><br>This will also delete all cards in this board. This action cannot be undone.`,
+        `Are you sure you want to delete <span class="board-title-inline ${shouldTruncate ? 'truncated' : ''}" title="${safeTitle}">${displayTitle}</span>?<br><br>` +
+        `This will also delete all cards in this board. This action cannot be undone.`,
         function() {
             // Remove board
             boards = boards.filter(b => b.id !== boardId);
