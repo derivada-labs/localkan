@@ -125,13 +125,18 @@ function createBoardCardHTML(board) {
     
     return `
         <div class="board-card" onclick="openBoard('${board.id}')" style="background: ${backgroundColor}">
-            <div class="board-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); editBoard('${board.id}')">Edit</button>
-                <button class="action-btn delete" onclick="event.stopPropagation(); deleteBoard('${board.id}')">Delete</button>
-            </div>
             <div class="board-header">
-                <div>
-                    <div class="board-title">${board.title}</div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-kanban"></i>
+                    <div class="board-title mb-0">${board.title}</div>
+                </div>
+                <div class="board-actions" onclick="event.stopPropagation()">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit board" onclick="editBoard('${board.id}')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete board" onclick="deleteBoard('${board.id}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </div>
             <div class="board-description">${board.description || 'No description provided'}</div>

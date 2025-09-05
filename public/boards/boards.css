@@ -292,7 +292,7 @@ body {
 .board-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 15px;
 }
 
@@ -334,35 +334,20 @@ body {
 }
 
 .board-actions {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    opacity: 0;
-    transition: opacity 0.2s;
+    display: flex;
+    gap: 8px;
 }
 
-.board-card:hover .board-actions {
-    opacity: 1;
+/* Use Bootstrap buttons; just tweak for glassy background */
+.board-actions .btn {
+    --bs-btn-padding-y: 0.25rem;
+    --bs-btn-padding-x: 0.5rem;
+    --bs-btn-font-size: 0.8rem;
+    backdrop-filter: blur(6px);
 }
 
-.action-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    padding: 5px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 5px;
-    transition: background 0.2s;
-    font-size: 0.8rem;
-}
-
-.action-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.action-btn.delete:hover {
-    background: rgba(255, 71, 87, 0.8);
+.board-actions .btn-outline-light:hover {
+    background: rgba(255,255,255,0.2);
 }
 
 /* Custom Modal Enhancements */
