@@ -473,10 +473,17 @@ body {
 
 /* Color Picker Styles */
 .color-picker-grid {
+    /* Center the swatches block under the label */
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-top: 10px;
+    grid-template-columns: repeat(3, 60px); /* match .color-option size */
+    /* More harmonic spacing between swatches */
+    gap: 15px 100px; /* row-gap, column-gap */
+    width: fit-content; /* shrink to content width */
+    margin: 10px auto 0; /* center horizontally */
+    justify-content: center;
+    justify-items: center; /* center items within each cell */
+    /* Add side padding so the grid has breathing room within the modal */
+    padding: 0 16px;
 }
 
 .color-option {
@@ -579,7 +586,13 @@ body {
     }
 
     .color-picker-grid {
-        grid-template-columns: repeat(2, 1fr);
+        /* Keep centered layout on small screens with 2 columns */
+        grid-template-columns: repeat(2, 60px);
+    width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    gap: 16px 18px; /* slightly tighter on mobile */
+    padding: 0 12px;
     }
 
     /* Mobile modal improvements */
