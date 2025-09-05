@@ -130,14 +130,6 @@ function createBoardCardHTML(board) {
                     <i class="bi bi-kanban"></i>
                     <div class="board-title mb-0">${board.title}</div>
                 </div>
-                <div class="board-actions" onclick="event.stopPropagation()">
-                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit board" onclick="editBoard('${board.id}')">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete board" onclick="deleteBoard('${board.id}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
             </div>
             <div class="board-description">${board.description || 'No description provided'}</div>
             <div class="board-stats">
@@ -151,6 +143,14 @@ function createBoardCardHTML(board) {
                 </div>
             </div>
             <div class="board-date">Created ${formatDate(board.createdAt)}</div>
+            <div class="board-card-actions" onclick="event.stopPropagation()">
+                <button type="button" class="board-card-action-btn edit" aria-label="Edit board" title="Edit board" onclick="editBoard('${board.id}')">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="board-card-action-btn delete" aria-label="Delete board" title="Delete board" onclick="deleteBoard('${board.id}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
         </div>
     `;
 }

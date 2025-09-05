@@ -350,6 +350,71 @@ body {
     background: rgba(255,255,255,0.2);
 }
 
+/* New bottom-right floating actions */
+.board-card-actions {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all 0.25s ease;
+    pointer-events: none; /* prevent hover flicker until visible */
+}
+
+.board-card:hover .board-card-actions {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.board-card-action-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.board-card-action-btn:hover,
+.board-card-action-btn:focus {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+.board-card-action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.board-card-action-btn.edit {
+    /* subtle accent */
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}
+
+.board-card-action-btn.delete {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.board-card-action-btn.delete:hover { background: rgba(239, 68, 68, 0.45); }
+.board-card-action-btn.edit:hover { background: rgba(102, 126, 234, 0.45); }
+
+/* Always show actions on touch devices (no hover) */
+@media (pointer: coarse) {
+    .board-card-actions { opacity: 1; transform: none; pointer-events: auto; }
+}
+
 /* Custom Modal Enhancements */
 .modal-backdrop.show {
     opacity: 0.6;
