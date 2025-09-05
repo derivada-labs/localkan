@@ -74,7 +74,8 @@ function initializeWorkspace() {
 function saveWorkspaceSettings(name, backgroundColor) {
     const workspaceSettings = {
         name: name,
-        backgroundColor: backgroundColor
+    backgroundColor: backgroundColor,
+    updatedAt: new Date().toISOString()
     };
     localStorage.setItem('workspaceSettings', JSON.stringify(workspaceSettings));
 }
@@ -305,6 +306,8 @@ function deleteBoard(boardId) {
             
             saveBoards();
             renderBoards();
+            // Nudge sync timestamp for change tracking
+            if (typeof trackDataChange === 'function') trackDataChange();
         },
         'Delete Board'
     );
