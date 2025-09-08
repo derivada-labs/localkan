@@ -1,11 +1,61 @@
 // Sync Manager for Kanban Todo App with Multi-User Support
 class SyncManager {
     constructor() {
-        this.serverUrl = 'http://localhost:3001';
+        // Dynamic server URL - uses empty string for production (Vercel), localhost for development
+        this.serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3001'
+            : '';  // Empty string for production - URLs will be /api/sync/...
         this.isOnline = false;
         this.isSyncing = false;
         this.userHash = localStorage.getItem('userSyncHash') || null;
         this.lastSyncTimestamp = parseInt(localStorage.getItem('lastSyncTimestamp') || '0');
+    }
+
+    // Merge helper: arrays of objects with id and updatedAt (string ISO or number)
+    mergeArrayById(localArr = [], cloudArr = []) {
+        const byId = new Map();
+        const addOrUpdate = (item, source) => {
+            if (!item || !item.id) return;
+            const existing = byId.get(item.id);
+            const ts = this.parseUpdateTs(item.updatedAt);
+            if (!existing) {
+                byId.set(item.id, { item, ts, source });
+                return;
+            }
+            // Keep the most recently updated
+            if (ts >= existing.ts) {
+                byId.set(item.id, { item, ts, source });
+            }
+        };
+        localArr.forEach(i => addOrUpdate(i, 'local'));
+        cloudArr.forEach(i => addOrUpdate(i, 'cloud'));
+        return Array.from(byId.values()).map(v => v.item);
+    }
+
+    parseUpdateTs(value) {
+        if (!value) return 0;
+        if (typeof value === 'number') return value;
+        const t = Date.parse(value);
+        return isNaN(t) ? 0 : t;
+    }
+
+    // Merge cards map { boardId: card[] }
+    mergeCardsMap(localCards = {}, cloudCards = {}) {
+        const merged = {};
+        const boardIds = new Set([...Object.keys(localCards), ...Object.keys(cloudCards)]);
+        boardIds.forEach(id => {
+            merged[id] = this.mergeArrayById(localCards[id] || [], cloudCards[id] || []);
+        });
+        return merged;
+    }
+
+    // Merge workspace settings (prefer newer updatedAt, fallback to local when equal)
+    mergeWorkspaceSettings(localWs, cloudWs) {
+        if (!localWs) return cloudWs || null;
+        if (!cloudWs) return localWs || null;
+        const lts = this.parseUpdateTs(localWs.updatedAt);
+        const cts = this.parseUpdateTs(cloudWs.updatedAt);
+        return cts > lts ? cloudWs : localWs;
     }
 
     // Check if user has a hash
@@ -58,7 +108,10 @@ class SyncManager {
     // Check if a hash exists on the server
     async checkHashExists(hash) {
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/check/${hash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/check/${hash}`
+                : `/api/sync/check/${hash}`;
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -103,8 +156,11 @@ class SyncManager {
         const cleanHash = hash.toLowerCase().replace(/[^a-z0-9]/g, '');
         
         // Check if hash exists on server
-        const exists = await this.checkHashExists(cleanHash);
-        if (!exists) {
+        const checkResult = await this.checkHashExists(cleanHash);
+        
+        // In demo mode, we always proceed since data doesn't persist
+        // The checkHashExists now returns true in demo mode to prevent errors
+        if (!checkResult) {
             this.showSyncStatus('Sync ID not found', 'error');
             return false;
         }
@@ -144,7 +200,10 @@ class SyncManager {
     // Check server connectivity
     async checkServerConnection() {
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/status`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/status`
+                : '/api/sync/status';
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -197,7 +256,10 @@ class SyncManager {
         }
 
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/data/${this.userHash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/data/${this.userHash}`
+                : `/api/sync/data/${this.userHash}`;
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -257,7 +319,10 @@ class SyncManager {
         }
 
         try {
-            const response = await fetch(`${this.serverUrl}/api/sync/data/${this.userHash}`, {
+            const url = this.serverUrl 
+                ? `${this.serverUrl}/api/sync/data/${this.userHash}`
+                : `/api/sync/data/${this.userHash}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(localData)
@@ -265,6 +330,14 @@ class SyncManager {
             
             if (response.ok) {
                 const result = await response.json();
+                
+                // Show warning if in demo mode
+                if (result.mode === 'demo' && result.warning) {
+                    console.warn('Demo mode:', result.warning);
+                    // Show abbreviated warning to user
+                    this.showSyncStatus('Demo mode - Set up Vercel KV for persistence', 'warning');
+                }
+                
                 return result.success;
             }
         } catch (error) {
@@ -328,37 +401,32 @@ class SyncManager {
                 }
             }
 
-            // Compare timestamps
-            const localTimestamp = localData.timestamp;
-            const cloudTimestamp = cloudData.timestamp;
-
-            if (cloudTimestamp > localTimestamp) {
-                // Cloud is newer, update local
-                this.updateLocalData(cloudData);
-                this.lastSyncTimestamp = Date.now();
-                localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
-                if (showUI) {
-                    this.showSyncStatus('Updated from cloud', 'success');
-                    // Reload page to show new data
-                    setTimeout(() => window.location.reload(), 1500);
+            // Merge per-entity for multi-user collaboration
+            const merged = {
+                timestamp: Date.now(),
+                data: {
+                    workspaceSettings: this.mergeWorkspaceSettings(localData.data.workspaceSettings, cloudData.data.workspaceSettings),
+                    boards: this.mergeArrayById(localData.data.boards, cloudData.data.boards),
+                    cards: this.mergeCardsMap(localData.data.cards, cloudData.data.cards)
                 }
-            } else if (localTimestamp > cloudTimestamp) {
-                // Local is newer, update cloud
-                const success = await this.uploadToCloud(localData);
-                if (success) {
-                    this.lastSyncTimestamp = Date.now();
-                    localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
-                    if (showUI) this.showSyncStatus('Uploaded to cloud', 'success');
-                } else {
-                    if (showUI) this.showSyncStatus('Upload failed', 'error');
+            };
+
+            // If merged equals cloud, just update local; otherwise upload merged
+            const uploadMerged = true; // keep simple and authoritative
+            if (uploadMerged) {
+                const success = await this.uploadToCloud(merged);
+                if (!success) {
+                    this.isSyncing = false;
+                    if (showUI) this.showSyncStatus('Merge upload failed', 'error');
                     return false;
                 }
-            } else {
-                // Data is already in sync
-                this.lastSyncTimestamp = Date.now();
-                localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
-                if (showUI) this.showSyncStatus('Already in sync', 'success');
             }
+
+            // Update local to merged
+            this.updateLocalData(merged);
+            this.lastSyncTimestamp = Date.now();
+            localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
+            if (showUI) this.showSyncStatus('Merged changes', 'success');
 
             this.isSyncing = false;
             return true;

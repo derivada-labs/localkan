@@ -1,18 +1,36 @@
 {
-  "name": "todo-app-sync-server",
-  "version": "1.0.0",
-  "description": "Sync server for Kanban Todo App",
+  "name": "localkan",
+  "version": "2.0.0",
+  "description": "Multi-User Kanban Todo App with Cloud Sync - Beautiful, responsive, and collaborative project management",
   "main": "server.js",
+  "type": "module",
   "scripts": {
+    "dev": "node server.js",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "vercel-dev": "vercel dev",
+    "vercel-build": "echo 'No build required'",
+    "deploy": "vercel --prod",
+    "test": "echo 'Open test/test-sync.html in browser for sync testing'",
+    "test:multiuser": "echo 'Open test/test-multiuser.html in browser for multi-user testing'",
+    "test:kv": "node test/test-kv.js",
+    "serve": "npx http-server public -p 8080 -o",
+    "lint": "echo 'No linting configured - using vanilla JS'",
+    "format": "echo 'No formatting configured - using vanilla JS'"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@upstash/redis": "^1.35.3",
+    "@vercel/kv": "^1.0.1",
     "cors": "^2.8.5",
-    "fs-extra": "^11.1.1"
+    "dotenv": "^17.2.2",
+    "express": "^4.18.2",
+    "fs-extra": "^11.1.1",
+    "redis": "^5.8.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

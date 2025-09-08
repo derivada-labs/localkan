@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Boards Dashboard</title>
+    <!-- Centralized styles: Bootstrap, Icons, Fonts, and app CSS are imported by boards.css -->
+    <link rel="stylesheet" href="/boards/boards.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Kanban Boards</div>
+        <div class="user-section" onclick="openWorkspaceSettings()">
+            <div class="user-avatar">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="user-info">
+                <h2 id="workspaceName">My workspace</h2>
+                <p><i class="bi bi-database-fill me-1"></i>Local Storage</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="boards-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-layout-wtf"></i>
+                Your boards
+            </h2>
+            <div class="header-actions">
+                <button class="action-button hash-button" onclick="openHashModal()" title="Manage Sync ID">
+                    <i class="bi bi-cloud-plus-fill"></i>
+                    <span id="hashButtonText">Setup Sync</span>
+                </button>
+                <button class="action-button sync-button" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Sync Now</span>
+                </button>
+                <div class="sync-info" id="syncInfo" style="display: none;">
+                    <span class="sync-status-text">ID: <span id="currentHashDisplay">None</span> | Last: <span id="lastSyncTime">Never</span></span>
+                </div>
+            </div>
+        </div>
+        <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBoards(event)">
+
+        <div class="boards-grid" id="boardsGrid">
+            <!-- Boards will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Create Board Modal -->
+    <div id="boardModal" class="modal fade" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="modalTitle">Create New Board</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="boardForm">
+                        <div class="form-group mb-3">
+                            <label for="boardTitle" class="form-label">Board Title *</label>
+                            <input type="text" id="boardTitle" class="form-control" required placeholder="Enter board title...">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="boardDescription" class="form-label">Description</label>
+                            <textarea id="boardDescription" class="form-control" placeholder="What is this board about? (optional)"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Background Color</label>
+                            <div class="color-picker-grid" id="colorPicker">
+                                <!-- Color options will be rendered here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteBoardBtn" onclick="deleteBoardFromModal()" style="display: none;">Delete Board</button>
+                    <button type="button" class="btn btn-primary" id="saveBoardBtn" onclick="submitBoardForm()">Create Board</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workspace Settings Modal -->
+    <div id="workspaceModal" class="modal fade" tabindex="-1" aria-labelledby="workspaceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="workspaceModalLabel">
+                        <i class="bi bi-briefcase-fill text-primary me-2"></i>
+                        Workspace Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="workspaceForm">
+                        <div class="form-group mb-3">
+                            <label for="workspaceTitle" class="form-label">Workspace Name *</label>
+                            <input type="text" id="workspaceTitle" class="form-control" required placeholder="Enter workspace name...">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Background Color</label>
+                            <div class="color-picker-grid" id="workspaceColorPicker">
+                                <!-- Color options will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Workspace Management</label>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-primary flex-fill" onclick="exportBoards()">
+                                    <i class="bi bi-download me-2"></i>Export Boards
+                                </button>
+                                <button type="button" class="btn btn-outline-primary flex-fill" onclick="triggerImport()">
+                                    <i class="bi bi-upload me-2"></i>Import Boards
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitWorkspaceForm()">Update Workspace</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hash Management Modal -->
+    <div id="hashModal" class="modal fade" tabindex="-1" aria-labelledby="hashModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-1">
+                    <h1 class="modal-title fs-4 fw-semibold" id="hashModalLabel">
+                        <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                        Sync ID Management
+                    </h1>
+                    <button type="button" class="btn-close" onclick="closeHashModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div id="hashModalContent">
+                        <!-- Content will be dynamically generated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal fade" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="confirmModalLabel">
+                        <i class="bi bi-question-circle-fill text-warning me-2"></i>
+                        Confirm Action
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage">Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmModalButton">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="notificationModalLabel">
+                        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                        Information
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="notificationModalMessage">Notification message</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared Sync Script -->
+    <script src="/shared/sync.js"></script>
+    <!-- Page-specific JavaScript -->
+    <script src="/boards/boards.js"></script>
+    
+    <!-- Bootstrap JS (kept as a single include; CSS is imported via boards.css) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
