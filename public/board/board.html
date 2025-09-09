@@ -10,21 +10,21 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <button class="back-btn" onclick="goBackToBoards()" title="Back to Boards">
+            <button class="btn btn-outline-light back-btn" onclick="goBackToBoards()" title="Back to Boards">
                 <i class="bi bi-arrow-left-short" style="font-size:1.2rem; vertical-align: -2px;"></i>
                 Boards
             </button>
-            <h1 id="boardTitle">Kanban Todo Board</h1>
+            <h1 id="boardTitle"><i class="bi bi-kanban text-white me-2"></i>Kanban Todo Board</h1>
             <div class="header-actions">
-                <button class="hash-btn" onclick="openHashModal()" title="Manage Sync ID">
+                <button class="btn btn-outline-light hash-btn" onclick="openHashModal()" title="Manage Sync ID">
                     <i class="bi bi-cloud-plus-fill me-1"></i>
                     <span id="hashButtonText">Setup</span>
                 </button>
-                <button class="sync-btn" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>
+                <button class="btn btn-outline-light sync-btn" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>
                     <i class="bi bi-arrow-repeat me-1"></i>
                     Sync
                 </button>
-                <button class="settings-btn" onclick="openSettingsModal()" title="Board Settings">
+                <button class="btn btn-outline-light settings-btn" onclick="openSettingsModal()" title="Board Settings">
                     <i class="bi bi-gear-fill me-1"></i>
                     Settings
                 </button>
@@ -36,108 +36,134 @@
         <div class="column" data-column="backlog">
             <div class="column-header">
                 <span class="column-title">Backlog</span>
-                <button class="add-card-btn" onclick="openAddCardModal('backlog')">+ Add Card</button>
+                <button class="btn btn-sm btn-outline-light add-card-btn" onclick="openAddCardModal('backlog')">+ Add Card</button>
             </div>
             <div class="cards-container" id="backlog-cards"></div>
-            <button class="mass-delete-btn" id="backlog-mass-delete" onclick="massDeleteCards('backlog')" title="Delete all cards in this column">🔥</button>
+            <button class="btn btn-sm btn-outline-danger mass-delete-btn" id="backlog-mass-delete" onclick="massDeleteCards('backlog')" title="Delete all cards in this column">
+                <i class="bi bi-fire"></i>
+            </button>
         </div>
 
         <div class="column" data-column="todo">
             <div class="column-header">
                 <span class="column-title">TO-DO</span>
-                <button class="add-card-btn" onclick="openAddCardModal('todo')">+ Add Card</button>
+                <button class="btn btn-sm btn-outline-light add-card-btn" onclick="openAddCardModal('todo')">+ Add Card</button>
             </div>
             <div class="cards-container" id="todo-cards"></div>
-            <button class="mass-delete-btn" id="todo-mass-delete" onclick="massDeleteCards('todo')" title="Delete all cards in this column">🔥</button>
+            <button class="btn btn-sm btn-outline-danger mass-delete-btn" id="todo-mass-delete" onclick="massDeleteCards('todo')" title="Delete all cards in this column">
+                <i class="bi bi-fire"></i>
+            </button>
         </div>
 
         <div class="column" data-column="doing">
             <div class="column-header">
                 <span class="column-title">Doing</span>
-                <button class="add-card-btn" onclick="openAddCardModal('doing')">+ Add Card</button>
+                <button class="btn btn-sm btn-outline-light add-card-btn" onclick="openAddCardModal('doing')">+ Add Card</button>
             </div>
             <div class="cards-container" id="doing-cards"></div>
-            <button class="mass-delete-btn" id="doing-mass-delete" onclick="massDeleteCards('doing')" title="Delete all cards in this column">🔥</button>
+            <button class="btn btn-sm btn-outline-danger mass-delete-btn" id="doing-mass-delete" onclick="massDeleteCards('doing')" title="Delete all cards in this column">
+                <i class="bi bi-fire"></i>
+            </button>
         </div>
 
         <div class="column" data-column="done">
             <div class="column-header">
                 <span class="column-title">Done</span>
-                <button class="add-card-btn" onclick="openAddCardModal('done')">+ Add Card</button>
+                <button class="btn btn-sm btn-outline-light add-card-btn" onclick="openAddCardModal('done')">+ Add Card</button>
             </div>
             <div class="cards-container" id="done-cards"></div>
-            <button class="mass-delete-btn" id="done-mass-delete" onclick="massDeleteCards('done')" title="Delete all cards in this column">🔥</button>
+            <button class="btn btn-sm btn-outline-danger mass-delete-btn" id="done-mass-delete" onclick="massDeleteCards('done')" title="Delete all cards in this column">
+                <i class="bi bi-fire"></i>
+            </button>
         </div>
     </div>
 
     <!-- Add/Edit Card Modal -->
-    <div id="cardModal" class="kb-modal">
-        <div class="kb-modal-content">
-            <div class="kb-modal-header">
-                <span class="kb-modal-title" id="modalTitle">Add New Card</span>
-                <span class="kb-close" onclick="closeModal()">&times;</span>
-            </div>
-            <form id="cardForm">
-                <div class="form-group">
-                    <label for="cardTitle">Title *</label>
-                    <input type="text" id="cardTitle" required>
+    <div id="cardModal" class="modal fade" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="modalTitle">Add New Card</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="form-group">
-                    <label for="cardDescription">Description</label>
-                    <textarea id="cardDescription" placeholder="Optional description..."></textarea>
+                <div class="modal-body">
+                    <form id="cardForm">
+                        <div class="form-group mb-3">
+                            <label for="cardTitle" class="form-label">Title *</label>
+                            <input type="text" id="cardTitle" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="cardDescription" class="form-label">Description</label>
+                            <textarea id="cardDescription" class="form-control" placeholder="Optional description..."></textarea>
+                        </div>
+                    </form>
                 </div>
-                <div class="kb-modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBtn" onclick="deleteCard()" style="display: none;">Delete</button>
                     <button type="submit" class="btn btn-primary" id="saveBtn">Save Card</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Board Settings Modal -->
-    <div id="settingsModal" class="kb-modal">
-        <div class="kb-modal-content">
-            <div class="kb-modal-header">
-                <span class="kb-modal-title">Board Settings</span>
-                <span class="kb-close" onclick="closeSettingsModal()">&times;</span>
-            </div>
-            <form id="boardSettingsForm">
-                <div class="form-group">
-                    <label for="settingsBoardTitle">Board Title *</label>
-                    <input type="text" id="settingsBoardTitle" required placeholder="Enter board title...">
+    <div id="settingsModal" class="modal fade" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="settingsModalLabel">
+                        <i class="bi bi-gear-fill text-primary me-2"></i>
+                        Board Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="form-group">
-                    <label for="settingsBoardDescription">Description</label>
-                    <textarea id="settingsBoardDescription" placeholder="What is this board about? (optional)"></textarea>
+                <div class="modal-body">
+                    <form id="boardSettingsForm">
+                        <div class="form-group mb-3">
+                            <label for="settingsBoardTitle" class="form-label">Board Title *</label>
+                            <input type="text" id="settingsBoardTitle" class="form-control" required placeholder="Enter board title...">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="settingsBoardDescription" class="form-label">Description</label>
+                            <textarea id="settingsBoardDescription" class="form-control" placeholder="What is this board about? (optional)"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Background Color</label>
+                            <div class="color-picker-grid" id="colorPicker">
+                                <!-- Color options will be rendered here -->
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>Background Color</label>
-                    <div class="color-picker-grid" id="colorPicker">
-                        <!-- Color options will be rendered here -->
-                    </div>
-                </div>
-                <div class="kb-modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger" onclick="deleteBoardFromSettings()">
                         <i class="bi bi-trash-fill me-1"></i>
                         Delete Board
                     </button>
                     <button type="submit" class="btn btn-primary">Update Board</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Hash Management Modal -->
-    <div id="hashModal" class="kb-modal">
-        <div class="kb-modal-content">
-            <div class="kb-modal-header">
-                <span class="kb-modal-title">Sync ID Management</span>
-                <span class="kb-close" onclick="closeHashModal()">&times;</span>
-            </div>
-            <div id="hashModalContent">
-                <!-- Content will be dynamically generated -->
+    <div id="hashModal" class="modal fade" tabindex="-1" aria-labelledby="hashModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-1">
+                    <h1 class="modal-title fs-4 fw-semibold" id="hashModalLabel">
+                        <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                        Sync ID Management
+                    </h1>
+                    <button type="button" class="btn-close" onclick="closeHashModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div id="hashModalContent">
+                        <!-- Content will be dynamically generated -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>

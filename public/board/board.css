@@ -34,21 +34,16 @@ body {
 }
 
 .header-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px;
-    align-items: stretch;
-    justify-items: stretch;
+    display: flex;
+    gap: 10px;
+    align-items: center;
     justify-self: end; /* right align within grid */
     grid-area: actions;
 }
 
 .back-btn {
     grid-area: back;
-}
-
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    font-size: 0.95rem;
 }
 
 .header h1 {
@@ -65,42 +60,26 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Unified header button style */
-.header .back-btn,
-.header .hash-btn,
-.header .sync-btn,
-.header .settings-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 44px;
-    min-width: 130px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
+/* Override Bootstrap btn-outline-light for glassmorphism effect */
+.header-actions .btn-outline-light {
+    --bs-btn-bg: rgba(255, 255, 255, 0.15);
+    --bs-btn-border-color: rgba(255, 255, 255, 0.3);
+    --bs-btn-hover-bg: rgba(255, 255, 255, 0.25);
+    --bs-btn-hover-border-color: rgba(255, 255, 255, 0.4);
+    --bs-btn-active-bg: rgba(255, 255, 255, 0.3);
+    --bs-btn-active-border-color: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(10px);
-    transition: background .2s ease, transform .1s ease, box-shadow .2s ease, border-color .2s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.header .back-btn:hover,
-.header .hash-btn:hover,
-.header .sync-btn:hover,
-.header .settings-btn:hover {
-    background: rgba(255, 255, 255, 0.26);
-    border-color: rgba(255, 255, 255, 0.42);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+.settings-btn, .sync-btn, .hash-btn {
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
 }
 
 .settings-btn:hover, .sync-btn:hover, .hash-btn:hover {
-    background: rgba(255, 255, 255, 0.26);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .sync-btn, .hash-btn {
@@ -112,15 +91,46 @@ body {
 .sync-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
 }
 
-/* Normalize icon size in header buttons (incl. back arrow) */
-.header .back-btn i,
-.header .hash-btn i,
-.header .sync-btn i,
-.header .settings-btn i {
-    font-size: 1rem !important;
-    line-height: 1;
+.sync-btn:disabled:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sync button states to match boards.css */
+.sync-btn.syncing i {
+    animation: syncRotate 1s linear infinite;
+}
+
+@keyframes syncRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.sync-btn.success {
+    --bs-btn-bg: rgba(16, 185, 129, 0.2) !important;
+    --bs-btn-border-color: rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.sync-btn.error {
+    --bs-btn-bg: rgba(239, 68, 68, 0.2) !important;
+    --bs-btn-border-color: rgba(239, 68, 68, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+.hash-btn.has-id {
+    --bs-btn-bg: rgba(16, 185, 129, 0.2);
+    --bs-btn-border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.hash-btn.has-id:hover {
+    --bs-btn-hover-bg: rgba(16, 185, 129, 0.3);
+    --bs-btn-hover-border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.2);
 }
 
 .board {
@@ -161,40 +171,32 @@ body {
     font-size: 1.1rem;
 }
 
-.add-card-btn {
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-size: 0.9rem;
+/* Style add card buttons with Bootstrap classes but maintain glassmorphism */
+.add-card-btn.btn-sm.btn-outline-light {
+    --bs-btn-bg: rgba(255, 255, 255, 0.2);
+    --bs-btn-border-color: rgba(255, 255, 255, 0.3);
+    --bs-btn-hover-bg: rgba(255, 255, 255, 0.35);
+    --bs-btn-hover-border-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
 }
 
 .add-card-btn:hover {
-    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .mass-delete-btn {
     position: absolute;
     bottom: 15px;
     right: 15px;
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    color: white;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1rem;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
     display: none;
+    transition: all 0.2s ease;
 }
 
 .mass-delete-btn:hover {
-    background: rgba(255, 100, 100, 0.4);
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
 }
@@ -293,139 +295,47 @@ body {
     border: 2px dashed rgba(255, 255, 255, 0.5);
 }
 
-/* Modal Styles (prefixed to avoid Bootstrap collisions) */
-.kb-modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.kb-modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 30px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    min-height: fit-content;
-}
-
-.kb-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.kb-modal-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #333;
-}
-
-.kb-close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.kb-close:hover {
-    color: #000;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-family: inherit;
-    font-size: 0.9rem;
-}
-
+/* Form styling that enhances Bootstrap */
 .form-group textarea {
     resize: vertical;
     min-height: 80px;
 }
 
-.kb-modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
+/* Custom button colors that match boards theme */
 .btn-primary {
-    background: #667eea;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #5a6fd8;
-}
-
-.btn-secondary {
-    background: #e0e0e0;
-    color: #333;
-}
-
-.btn-secondary:hover {
-    background: #d0d0d0;
+    --bs-btn-bg: #667eea;
+    --bs-btn-border-color: #667eea;
+    --bs-btn-hover-bg: #5a6fd8;
+    --bs-btn-hover-border-color: #5a6fd8;
+    --bs-btn-active-bg: #5266c4;
+    --bs-btn-active-border-color: #5266c4;
 }
 
 .btn-danger {
-    background: #ff4757;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #ff3838;
+    --bs-btn-bg: #ff4757;
+    --bs-btn-border-color: #ff4757;
+    --bs-btn-hover-bg: #ff3838;
+    --bs-btn-hover-border-color: #ff3838;
+    --bs-btn-active-bg: #ff2c2c;
+    --bs-btn-active-border-color: #ff2c2c;
 }
 
 /* Input focus style aligned with boards page */
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
+.form-control:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Color Picker Styles */
+/* Color Picker Styles - match boards.css layout */
 .color-picker-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-top: 10px;
+    grid-template-columns: repeat(3, 60px);
+    gap: 15px 100px; /* row-gap, column-gap */
+    width: fit-content;
+    margin: 10px auto 0;
+    justify-content: center;
+    justify-items: center;
+    padding: 0 16px;
 }
 
 .color-option {
@@ -518,19 +428,20 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Mobile modal improvements */
-    .kb-modal-content {
-        margin: 5% auto;
-        margin-bottom: 20px;
-        width: 95%;
-        padding: 20px;
+    /* Mobile modal improvements - Bootstrap modals */
+    .modal-dialog {
+        margin: 0.5rem;
+        width: auto;
     }
 
-    .kb-modal-actions {
+    .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+
+    .modal-footer {
         flex-direction: column;
     }
-
-    .btn { width: 100%; margin-bottom: 5px; }
 }
 
 /* Medium screens: slightly tighter gaps to fit more columns */

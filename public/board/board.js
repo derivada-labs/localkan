@@ -248,11 +248,15 @@ function openSettingsModal() {
         renderColorPicker();
     }
     
-    document.getElementById('settingsModal').style.display = 'block';
+    const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    modal.show();
 }
 
 function closeSettingsModal() {
-    document.getElementById('settingsModal').style.display = 'none';
+    const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+    if (modal) {
+        modal.hide();
+    }
 }
 
 function deleteBoardFromSettings() {
@@ -280,7 +284,9 @@ function openAddCardModal(column) {
     document.getElementById('cardDescription').value = '';
     document.getElementById('deleteBtn').style.display = 'none';
     document.getElementById('saveBtn').textContent = 'Save Card';
-    document.getElementById('cardModal').style.display = 'block';
+    
+    const modal = new bootstrap.Modal(document.getElementById('cardModal'));
+    modal.show();
 }
 
 function editCard(cardId) {
@@ -294,11 +300,16 @@ function editCard(cardId) {
     document.getElementById('cardDescription').value = card.description || '';
     document.getElementById('deleteBtn').style.display = 'inline-block';
     document.getElementById('saveBtn').textContent = 'Update Card';
-    document.getElementById('cardModal').style.display = 'block';
+    
+    const modal = new bootstrap.Modal(document.getElementById('cardModal'));
+    modal.show();
 }
 
 function closeModal() {
-    document.getElementById('cardModal').style.display = 'none';
+    const modal = bootstrap.Modal.getInstance(document.getElementById('cardModal'));
+    if (modal) {
+        modal.hide();
+    }
     currentCardId = null;
     currentColumn = null;
 }
@@ -439,30 +450,11 @@ function handleDrop(e) {
     }
 }
 
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
-    const cardModal = document.getElementById('cardModal');
-    const settingsModal = document.getElementById('settingsModal');
-    
-    if (e.target === cardModal) {
-        closeModal();
-    }
-    if (e.target === settingsModal) {
-        closeSettingsModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeModal();
-        closeSettingsModal();
-    }
-});
+// Bootstrap modals handle backdrop clicks and Escape key automatically
 
 // Hash Management Modal (same as in boards.html)
 function openHashModal() {
-    const modal = document.getElementById('hashModal');
+    const modalElement = document.getElementById('hashModal');
     const content = document.getElementById('hashModalContent');
     
     if (syncManager.hasHash()) {
@@ -544,11 +536,15 @@ function openHashModal() {
         `;
     }
     
-    modal.style.display = 'block';
+    const modal = new bootstrap.Modal(document.getElementById('hashModal'));
+    modal.show();
 }
 
 function closeHashModal() {
-    document.getElementById('hashModal').style.display = 'none';
+    const modal = bootstrap.Modal.getInstance(document.getElementById('hashModal'));
+    if (modal) {
+        modal.hide();
+    }
 }
 
 function copyHashToClipboard() {
@@ -640,10 +636,4 @@ if (syncManager.hasHash()) {
     syncManager.syncData(false);
 }
 
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
-    const hashModal = document.getElementById('hashModal');
-    if (e.target === hashModal) {
-        closeHashModal();
-    }
-});
+// Bootstrap modals handle backdrop clicks automatically
