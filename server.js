@@ -234,6 +234,34 @@ const routeHandlers = {
         if (!timestamp || !data) {
             throw createError('Missing timestamp or data');
         }
+
+        // Light normalization: keep unknown fields but normalize assignees and clamp priority
+        try {
+            if (data && data.cards && typeof data.cards === 'object') {
+                Object.keys(data.cards).forEach((boardId) => {
+                    const arr = Array.isArray(data.cards[boardId]) ? data.cards[boardId] : [];
+                    data.cards[boardId] = arr.map((card) => {
+                        const out = { ...card };
+                        if (Array.isArray(out.assignees)) {
+                            out.assignees = out.assignees
+                                .filter(a => typeof a === 'string')
+                                .map(a => a.trim())
+                                .filter(a => a.length > 0);
+                        } else if (typeof out.assignee === 'string') {
+                            const a = out.assignee.trim();
+                            out.assignees = a ? [a] : [];
+                        }
+                        if (out.priority !== undefined) {
+                            const p = parseInt(out.priority, 10);
+                            if (!Number.isNaN(p)) out.priority = Math.min(3, Math.max(0, p));
+                        }
+                        return out;
+                    });
+                });
+            }
+        } catch (e) {
+            // Ignore normalization errors; continue with raw payload
+        }
         
         const existingData = await redis.get(`sync:${hash}`);
         

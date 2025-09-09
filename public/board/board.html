@@ -24,12 +24,19 @@
                     <i class="bi bi-arrow-repeat me-1"></i>
                     Sync
                 </button>
-                <div class="assignee-filter d-none d-md-flex align-items-center gap-2">
-                    <label for="assigneeFilter" class="text-white-50 small mb-0">Assignee</label>
-                    <select id="assigneeFilter" class="form-select form-select-sm bg-transparent text-white border-light" style="width: 180px;">
-                        <option value="ALL">All</option>
-                        <option value="UNASSIGNED">Unassigned</option>
-                    </select>
+                <div id="filtersContainer" class="filters-container position-relative">
+                    <button class="btn btn-outline-light filter-btn" onclick="toggleFilters()" title="Show Filters">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                    <div id="filtersPanel" class="filters-panel" style="display: none;">
+                        <div class="assignee-filter d-flex align-items-center gap-2 mb-2">
+                            <label for="assigneeFilter" class="text-muted small mb-0">Assignees</label>
+                            <select id="assigneeFilter" multiple class="form-select form-select-sm" style="width: 220px;" title="Select none or 'All' for no filter">
+                                <option value="ALL">All</option>
+                                <option value="UNASSIGNED">Unassigned</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <button class="btn btn-outline-light settings-btn" onclick="openSettingsModal()" title="Board Settings">
                     <i class="bi bi-gear-fill me-1"></i>
@@ -106,18 +113,18 @@
                         <div class="row g-3">
                             <div class="col-12 col-md-7">
                                 <div class="form-group">
-                                    <label for="cardAssignee" class="form-label">Assignee</label>
-                                    <input type="text" id="cardAssignee" class="form-control" placeholder="Who's responsible? (optional)">
+                                    <label for="cardAssignees" class="form-label">Assignees</label>
+                                    <input type="text" id="cardAssignees" class="form-control" placeholder="Comma-separated names (e.g., Alice, Bob)">
                                 </div>
                             </div>
                             <div class="col-12 col-md-5">
                                 <div class="form-group">
                                     <label for="cardPriority" class="form-label">Priority</label>
                                     <select id="cardPriority" class="form-select">
-                                        <option value="0">P0 (Critical)</option>
-                                        <option value="1">P1 (High)</option>
-                                        <option value="2">P2 (Medium)</option>
-                                        <option value="3" selected>P3 (Low)</option>
+                                        <option value="0" selected>0 (Low)</option>
+                                        <option value="1">1 (Medium)</option>
+                                        <option value="2">2 (High)</option>
+                                        <option value="3">3 (Critical)</option>
                                     </select>
                                 </div>
                             </div>
@@ -127,7 +134,7 @@
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBtn" onclick="deleteCard()" style="display: none;">Delete</button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Card</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn" form="cardForm">Save Card</button>
                 </div>
             </div>
         </div>
@@ -168,7 +175,7 @@
                         <i class="bi bi-trash-fill me-1"></i>
                         Delete Board
                     </button>
-                    <button type="submit" class="btn btn-primary">Update Board</button>
+                    <button type="submit" class="btn btn-primary" form="boardSettingsForm">Update Board</button>
                 </div>
             </div>
         </div>

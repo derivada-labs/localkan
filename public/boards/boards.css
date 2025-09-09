@@ -637,6 +637,17 @@ body {
     z-index: 9999;
 }
 
+/* Assignee filter select */
+.assignee-filter select.form-select {
+    color: #fff;
+    border-color: rgba(255,255,255,0.5);
+    background-color: rgba(255,255,255,0.1);
+}
+
+.assignee-filter select.form-select option {
+    color: #000;
+}
+
 @media (max-width: 768px) {
     .header {
         flex-direction: column;

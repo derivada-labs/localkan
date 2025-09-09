@@ -3,6 +3,7 @@ let boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
 let currentEditBoardId = null;
 let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
 let selectedWorkspaceColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default workspace color
+let dashboardAssigneeFilter = []; // array of selected names, includes 'UNASSIGNED'
 
 // Modal helper functions
 function showConfirmModal(title, message, onConfirm, confirmButtonText = 'Confirm', confirmButtonClass = 'btn-danger') {
@@ -116,6 +117,54 @@ function getBoardStats(boardId) {
         done: cards.filter(c => c.column === 'done').length
     };
     return stats;
+}
+
+// Get unique assignees across all boards (case-insensitive, stored lowercased)
+function getAllAssignees() {
+    const names = new Set();
+    boards.forEach(b => {
+        const cards = JSON.parse(localStorage.getItem(`kanbanCards_${b.id}`)) || [];
+        cards.forEach(c => {
+            if (Array.isArray(c.assignees)) {
+                c.assignees.forEach(a => {
+                    if (typeof a === 'string' && a.trim()) names.add(a.trim().toLowerCase());
+                });
+            } else if (typeof c.assignee === 'string' && c.assignee.trim()) {
+                names.add(c.assignee.trim().toLowerCase());
+            }
+        });
+    });
+    return Array.from(names).sort();
+}
+
+function boardMatchesAssigneeFilter(board) {
+    if (!Array.isArray(dashboardAssigneeFilter) || dashboardAssigneeFilter.length === 0 || dashboardAssigneeFilter.includes('ALL')) return true; // no filters => show all
+    const cards = JSON.parse(localStorage.getItem(`kanbanCards_${board.id}`)) || [];
+    const hasUnassigned = dashboardAssigneeFilter.includes('UNASSIGNED');
+    // If any card in the board matches any selected assignee, include the board
+    return cards.some(c => {
+        const list = Array.isArray(c.assignees)
+            ? c.assignees.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim().toLowerCase())
+            : ((c.assignee && typeof c.assignee === 'string') ? [c.assignee.trim().toLowerCase()] : []);
+        const isUnassigned = list.length === 0;
+        const nameMatch = dashboardAssigneeFilter
+            .filter(v => v !== 'UNASSIGNED')
+            .some(sel => list.includes(sel.toLowerCase()));
+        return (hasUnassigned && isUnassigned) || nameMatch;
+    });
+}
+
+function buildDashboardAssigneeFilter() {
+    const select = document.getElementById('dashboardAssigneeFilter');
+    if (!select) return;
+    const names = getAllAssignees();
+    const prev = Array.isArray(dashboardAssigneeFilter) ? dashboardAssigneeFilter : [];
+    select.innerHTML = '<option value="ALL">All</option><option value="UNASSIGNED">Unassigned</option>' +
+        names.map(n => `<option value="${n}">${n}</option>`).join('');
+    dashboardAssigneeFilter = prev.filter(v => v === 'ALL' || v === 'UNASSIGNED' || names.includes(v));
+    for (const opt of select.options) {
+        opt.selected = dashboardAssigneeFilter.includes(opt.value);
+    }
 }
 
 // Create board card HTML
@@ -242,7 +291,9 @@ function closeWorkspaceModal() {
 function renderBoards() {
     const boardsGrid = document.getElementById('boardsGrid');
     
-    if (boards.length === 0) {
+    const visibleBoards = boards.filter(boardMatchesAssigneeFilter);
+
+    if (visibleBoards.length === 0) {
         boardsGrid.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">
@@ -257,7 +308,7 @@ function renderBoards() {
             </div>
         `;
     } else {
-        const boardsHTML = boards.map(createBoardCardHTML).join('');
+        const boardsHTML = visibleBoards.map(createBoardCardHTML).join('');
         boardsGrid.innerHTML = boardsHTML + createNewBoardCardHTML();
     }
 }
@@ -952,6 +1003,7 @@ function updateSyncInfo() {
 
 // Initialize the app
 initializeWorkspace();
+buildDashboardAssigneeFilter();
 renderBoards();
 updateSyncUI();
 
@@ -970,4 +1022,39 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+});
+
+// Wire up dashboard assignee filter changes
+document.getElementById('dashboardAssigneeFilter')?.addEventListener('change', function() {
+    let selected = Array.from(this.selectedOptions).map(o => o.value);
+    if (selected.includes('ALL')) {
+        selected = ['ALL'];
+        for (const opt of this.options) opt.selected = (opt.value === 'ALL');
+    }
+    dashboardAssigneeFilter = selected;
+    renderBoards();
+});
+
+// Rebuild filter when boards/cards change (simple hook: when we render/save/import)
+const _saveBoards = saveBoards;
+saveBoards = function() {
+    _saveBoards.call(this);
+    buildDashboardAssigneeFilter();
+};
+
+// Dashboard filter dropdown toggle and outside click handler
+function toggleDashboardFilters() {
+    const panel = document.getElementById('dashboardFiltersPanel');
+    if (!panel) return;
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'block';
+}
+
+document.addEventListener('click', (e) => {
+    const container = document.getElementById('dashboardFiltersContainer');
+    const panel = document.getElementById('dashboardFiltersPanel');
+    if (!container || !panel) return;
+    if (!container.contains(e.target)) {
+        panel.style.display = 'none';
+    }
 });

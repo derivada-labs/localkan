@@ -7,7 +7,7 @@ let currentBoardId = null;
 let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
 const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
 const IS_TOUCH = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-let currentAssigneeFilter = 'ALL'; // ALL | UNASSIGNED | specific name
+let currentAssigneeFilter = []; // array of selected names; special 'UNASSIGNED' value
 
 // Color themes
 const colorThemes = [
@@ -110,15 +110,17 @@ function truncateText(text, maxLength) {
 // Create card HTML
 function createCardHTML(card) {
     const truncatedDescription = truncateText(card.description || '', 150);
-    const assignee = (card.assignee || '').trim();
-    const priority = typeof card.priority === 'number' ? card.priority : 3;
+    const assignees = Array.isArray(card.assignees)
+        ? card.assignees.filter(a => typeof a === 'string' && a.trim().length > 0).map(a => a.trim())
+        : ((card.assignee && typeof card.assignee === 'string') ? [card.assignee.trim()] : []);
+    const priority = typeof card.priority === 'number' ? card.priority : 0;
     const priorityMap = {
-        0: { label: 'P0', cls: 'priority-p0', title: 'Critical' },
-        1: { label: 'P1', cls: 'priority-p1', title: 'High' },
-        2: { label: 'P2', cls: 'priority-p2', title: 'Medium' },
-        3: { label: 'P3', cls: 'priority-p3', title: 'Low' }
+        0: { label: 'P0', cls: 'priority-p0', title: 'Low' },
+        1: { label: 'P1', cls: 'priority-p1', title: 'Medium' },
+        2: { label: 'P2', cls: 'priority-p2', title: 'High' },
+        3: { label: 'P3', cls: 'priority-p3', title: 'Critical' }
     };
-    const p = priorityMap[priority] || priorityMap[3];
+    const p = priorityMap[priority] || priorityMap[0];
     const moveButtons = IS_TOUCH
         ? `
             <button class="card-action-btn" onclick="moveCardLeft('${card.id}')" title="Move left" aria-label="Move left">
@@ -137,7 +139,7 @@ function createCardHTML(card) {
                 <div class="card-description">${truncatedDescription}</div>
                 <div class="card-meta d-flex align-items-center gap-2 mt-2 flex-wrap">
                     <span class="badge ${p.cls}" title="${p.title}">${p.label}</span>
-                    ${assignee ? `<span class="assignee-chip" title="Assignee"><i class="bi bi-person-circle me-1"></i>${assignee}</span>` : ''}
+                    ${assignees.map(a => `<span class="assignee-chip" title="Assignee"><i class="bi bi-person-circle me-1"></i>${a}</span>`).join('')}
                 </div>
             </div>
             <div class="card-actions">
@@ -160,17 +162,24 @@ function renderCards() {
         const container = document.getElementById(`${column}-cards`);
         let columnCards = cards.filter(card => card.column === column);
         // Apply assignee filter
-        if (currentAssigneeFilter === 'UNASSIGNED') {
-            columnCards = columnCards.filter(c => !c.assignee || !c.assignee.trim());
-        } else if (currentAssigneeFilter !== 'ALL') {
-            const f = currentAssigneeFilter.toLowerCase();
-            columnCards = columnCards.filter(c => (c.assignee || '').toLowerCase() === f);
+    if (Array.isArray(currentAssigneeFilter) && currentAssigneeFilter.length > 0 && !currentAssigneeFilter.includes('ALL')) {
+            const hasUnassigned = currentAssigneeFilter.includes('UNASSIGNED');
+            columnCards = columnCards.filter(c => {
+                const list = Array.isArray(c.assignees)
+                    ? c.assignees.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim().toLowerCase())
+                    : ((c.assignee && typeof c.assignee === 'string') ? [c.assignee.trim().toLowerCase()] : []);
+                const isUnassigned = list.length === 0;
+                const nameMatch = currentAssigneeFilter
+                    .filter(v => v !== 'UNASSIGNED')
+                    .some(sel => list.includes(sel.toLowerCase()));
+                return (hasUnassigned && isUnassigned) || nameMatch;
+            });
         }
-        // Sort by priority then createdAt
+        // Sort by priority (3 highest) then createdAt
         columnCards = columnCards.sort((a, b) => {
-            const pa = typeof a.priority === 'number' ? a.priority : 3;
-            const pb = typeof b.priority === 'number' ? b.priority : 3;
-            if (pa !== pb) return pa - pb; // lower number = higher priority
+            const pa = typeof a.priority === 'number' ? a.priority : 0;
+            const pb = typeof b.priority === 'number' ? b.priority : 0;
+            if (pa !== pb) return pb - pa; // higher number = higher priority
             return new Date(a.createdAt) - new Date(b.createdAt);
         });
         container.innerHTML = columnCards.map(createCardHTML).join('');
@@ -310,10 +319,10 @@ function openAddCardModal(column) {
     document.getElementById('modalTitle').textContent = 'Add New Card';
     document.getElementById('cardTitle').value = '';
     document.getElementById('cardDescription').value = '';
-    const assigneeInput = document.getElementById('cardAssignee');
+    const assigneeInput = document.getElementById('cardAssignees');
     const prioritySelect = document.getElementById('cardPriority');
     if (assigneeInput) assigneeInput.value = '';
-    if (prioritySelect) prioritySelect.value = '3';
+    if (prioritySelect) prioritySelect.value = '0';
     document.getElementById('deleteBtn').style.display = 'none';
     document.getElementById('saveBtn').textContent = 'Save Card';
     
@@ -330,10 +339,15 @@ function editCard(cardId) {
     document.getElementById('modalTitle').textContent = 'Edit Card';
     document.getElementById('cardTitle').value = card.title;
     document.getElementById('cardDescription').value = card.description || '';
-    const assigneeInput = document.getElementById('cardAssignee');
+    const assigneeInput = document.getElementById('cardAssignees');
     const prioritySelect = document.getElementById('cardPriority');
-    if (assigneeInput) assigneeInput.value = card.assignee || '';
-    if (prioritySelect) prioritySelect.value = String(typeof card.priority === 'number' ? card.priority : 3);
+    if (assigneeInput) {
+        const list = Array.isArray(card.assignees)
+            ? card.assignees
+            : ((card.assignee && typeof card.assignee === 'string') ? [card.assignee] : []);
+        assigneeInput.value = list.join(', ');
+    }
+    if (prioritySelect) prioritySelect.value = String(typeof card.priority === 'number' ? card.priority : 0);
     document.getElementById('deleteBtn').style.display = 'inline-block';
     document.getElementById('saveBtn').textContent = 'Update Card';
     
@@ -373,8 +387,11 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
     
     const title = document.getElementById('cardTitle').value.trim();
     const description = document.getElementById('cardDescription').value.trim();
-    const assignee = (document.getElementById('cardAssignee')?.value || '').trim();
-    const priority = parseInt(document.getElementById('cardPriority')?.value || '3', 10);
+    const assigneesRaw = (document.getElementById('cardAssignees')?.value || '');
+    const assignees = assigneesRaw.split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    const priority = parseInt(document.getElementById('cardPriority')?.value || '0', 10);
     
     if (!title) return;
 
@@ -384,8 +401,9 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
         if (cardIndex !== -1) {
             cards[cardIndex].title = title;
             cards[cardIndex].description = description;
-            cards[cardIndex].assignee = assignee;
-            cards[cardIndex].priority = isNaN(priority) ? 3 : priority;
+            delete cards[cardIndex].assignee; // migrate to array
+            cards[cardIndex].assignees = assignees;
+            cards[cardIndex].priority = isNaN(priority) ? 0 : priority;
             cards[cardIndex].updatedAt = new Date().toISOString();
         }
     } else {
@@ -394,8 +412,8 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
             id: generateId(),
             title: title,
             description: description,
-            assignee: assignee,
-            priority: isNaN(priority) ? 3 : priority,
+            assignees: assignees,
+            priority: isNaN(priority) ? 0 : priority,
             column: currentColumn,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -678,27 +696,31 @@ function buildAssigneeFilterOptions() {
     const select = document.getElementById('assigneeFilter');
     if (!select) return;
     const names = Array.from(new Set(cards
-        .map(c => (c.assignee || '').trim())
+        .flatMap(c => Array.isArray(c.assignees) ? c.assignees : ((c.assignee && typeof c.assignee === 'string') ? [c.assignee] : []))
+        .map(n => (n || '').trim())
         .filter(n => n.length > 0)
         .map(n => n.toLowerCase()))).sort();
-    // Preserve selection
-    const prev = currentAssigneeFilter;
-    // Reset to default options
+    // Preserve selection (array)
+    const prev = Array.isArray(currentAssigneeFilter) ? currentAssigneeFilter : [];
+    // Reset options
     select.innerHTML = '<option value="ALL">All</option><option value="UNASSIGNED">Unassigned</option>' +
         names.map(n => `<option value="${n}">${n}</option>`).join('');
-    // Restore selection if still present
-    if (prev && (prev === 'ALL' || prev === 'UNASSIGNED' || names.includes(prev))) {
-        currentAssigneeFilter = prev;
-        select.value = prev;
-    } else {
-        currentAssigneeFilter = 'ALL';
-        select.value = 'ALL';
+    // Restore selection values that still exist
+    currentAssigneeFilter = prev.filter(v => v === 'ALL' || v === 'UNASSIGNED' || names.includes(v));
+    for (const opt of select.options) {
+        opt.selected = currentAssigneeFilter.includes(opt.value);
     }
 }
 
 // Wire up filter change
 document.getElementById('assigneeFilter')?.addEventListener('change', function() {
-    currentAssigneeFilter = this.value;
+    let selected = Array.from(this.selectedOptions).map(o => o.value);
+    // If ALL is selected, it takes precedence (clear others)
+    if (selected.includes('ALL')) {
+        selected = ['ALL'];
+        for (const opt of this.options) opt.selected = (opt.value === 'ALL');
+    }
+    currentAssigneeFilter = selected;
     renderCards();
 });
 
@@ -716,5 +738,22 @@ buildAssigneeFilterOptions();
 if (syncManager.hasHash()) {
     syncManager.syncData(false);
 }
+
+// Filter dropdown toggle and outside click handler
+function toggleFilters() {
+    const panel = document.getElementById('filtersPanel');
+    if (!panel) return;
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'block';
+}
+
+document.addEventListener('click', (e) => {
+    const container = document.getElementById('filtersContainer');
+    const panel = document.getElementById('filtersPanel');
+    if (!container || !panel) return;
+    if (!container.contains(e.target)) {
+        panel.style.display = 'none';
+    }
+});
 
 // Bootstrap modals handle backdrop clicks automatically

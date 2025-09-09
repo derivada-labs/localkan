@@ -139,6 +139,20 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     overflow-x: auto;
+.filters-container { position: relative; }
+.filters-panel {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: #fff;
+    color: #111827;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 12px;
+    min-width: 280px;
+    z-index: 1000;
+}
+.filter-btn { display: inline-flex; align-items:center; gap:6px; }
     padding-bottom: 20px;
 }
 
@@ -454,10 +468,11 @@ body {
     font-weight: 600;
 }
 
-.priority-p0 { background-color: #fee2e2; color: #991b1b; }
-.priority-p1 { background-color: #ffedd5; color: #9a3412; }
-.priority-p2 { background-color: #e0e7ff; color: #3730a3; }
-.priority-p3 { background-color: #e5e7eb; color: #374151; }
+/* P0 lowest -> subtle, P3 critical -> strongest */
+.priority-p0 { background-color: #e5e7eb; color: #374151; }
+.priority-p1 { background-color: #e0e7ff; color: #3730a3; }
+.priority-p2 { background-color: #ffedd5; color: #9a3412; }
+.priority-p3 { background-color: #fee2e2; color: #991b1b; }
 
 .assignee-chip {
     background: #f1f5f9;
