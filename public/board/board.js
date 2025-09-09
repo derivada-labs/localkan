@@ -7,6 +7,7 @@ let currentBoardId = null;
 let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
 const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
 const IS_TOUCH = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+let currentAssigneeFilter = 'ALL'; // ALL | UNASSIGNED | specific name
 
 // Color themes
 const colorThemes = [
@@ -109,6 +110,15 @@ function truncateText(text, maxLength) {
 // Create card HTML
 function createCardHTML(card) {
     const truncatedDescription = truncateText(card.description || '', 150);
+    const assignee = (card.assignee || '').trim();
+    const priority = typeof card.priority === 'number' ? card.priority : 3;
+    const priorityMap = {
+        0: { label: 'P0', cls: 'priority-p0', title: 'Critical' },
+        1: { label: 'P1', cls: 'priority-p1', title: 'High' },
+        2: { label: 'P2', cls: 'priority-p2', title: 'Medium' },
+        3: { label: 'P3', cls: 'priority-p3', title: 'Low' }
+    };
+    const p = priorityMap[priority] || priorityMap[3];
     const moveButtons = IS_TOUCH
         ? `
             <button class="card-action-btn" onclick="moveCardLeft('${card.id}')" title="Move left" aria-label="Move left">
@@ -125,6 +135,10 @@ function createCardHTML(card) {
             <div class="card-content">
                 <div class="card-title">${card.title}</div>
                 <div class="card-description">${truncatedDescription}</div>
+                <div class="card-meta d-flex align-items-center gap-2 mt-2 flex-wrap">
+                    <span class="badge ${p.cls}" title="${p.title}">${p.label}</span>
+                    ${assignee ? `<span class="assignee-chip" title="Assignee"><i class="bi bi-person-circle me-1"></i>${assignee}</span>` : ''}
+                </div>
             </div>
             <div class="card-actions">
                 ${moveButtons}
@@ -144,7 +158,21 @@ function createCardHTML(card) {
 function renderCards() {
     COLUMNS.forEach(column => {
         const container = document.getElementById(`${column}-cards`);
-        const columnCards = cards.filter(card => card.column === column);
+        let columnCards = cards.filter(card => card.column === column);
+        // Apply assignee filter
+        if (currentAssigneeFilter === 'UNASSIGNED') {
+            columnCards = columnCards.filter(c => !c.assignee || !c.assignee.trim());
+        } else if (currentAssigneeFilter !== 'ALL') {
+            const f = currentAssigneeFilter.toLowerCase();
+            columnCards = columnCards.filter(c => (c.assignee || '').toLowerCase() === f);
+        }
+        // Sort by priority then createdAt
+        columnCards = columnCards.sort((a, b) => {
+            const pa = typeof a.priority === 'number' ? a.priority : 3;
+            const pb = typeof b.priority === 'number' ? b.priority : 3;
+            if (pa !== pb) return pa - pb; // lower number = higher priority
+            return new Date(a.createdAt) - new Date(b.createdAt);
+        });
         container.innerHTML = columnCards.map(createCardHTML).join('');
     });
 
@@ -282,6 +310,10 @@ function openAddCardModal(column) {
     document.getElementById('modalTitle').textContent = 'Add New Card';
     document.getElementById('cardTitle').value = '';
     document.getElementById('cardDescription').value = '';
+    const assigneeInput = document.getElementById('cardAssignee');
+    const prioritySelect = document.getElementById('cardPriority');
+    if (assigneeInput) assigneeInput.value = '';
+    if (prioritySelect) prioritySelect.value = '3';
     document.getElementById('deleteBtn').style.display = 'none';
     document.getElementById('saveBtn').textContent = 'Save Card';
     
@@ -298,6 +330,10 @@ function editCard(cardId) {
     document.getElementById('modalTitle').textContent = 'Edit Card';
     document.getElementById('cardTitle').value = card.title;
     document.getElementById('cardDescription').value = card.description || '';
+    const assigneeInput = document.getElementById('cardAssignee');
+    const prioritySelect = document.getElementById('cardPriority');
+    if (assigneeInput) assigneeInput.value = card.assignee || '';
+    if (prioritySelect) prioritySelect.value = String(typeof card.priority === 'number' ? card.priority : 3);
     document.getElementById('deleteBtn').style.display = 'inline-block';
     document.getElementById('saveBtn').textContent = 'Update Card';
     
@@ -337,6 +373,8 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
     
     const title = document.getElementById('cardTitle').value.trim();
     const description = document.getElementById('cardDescription').value.trim();
+    const assignee = (document.getElementById('cardAssignee')?.value || '').trim();
+    const priority = parseInt(document.getElementById('cardPriority')?.value || '3', 10);
     
     if (!title) return;
 
@@ -346,6 +384,8 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
         if (cardIndex !== -1) {
             cards[cardIndex].title = title;
             cards[cardIndex].description = description;
+            cards[cardIndex].assignee = assignee;
+            cards[cardIndex].priority = isNaN(priority) ? 3 : priority;
             cards[cardIndex].updatedAt = new Date().toISOString();
         }
     } else {
@@ -354,6 +394,8 @@ document.getElementById('cardForm').addEventListener('submit', function(e) {
             id: generateId(),
             title: title,
             description: description,
+            assignee: assignee,
+            priority: isNaN(priority) ? 3 : priority,
             column: currentColumn,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -630,6 +672,45 @@ function updateSyncUI() {
 // Initialize the app
 initializeBoard();
 updateSyncUI();
+
+// Build assignee filter options based on current cards
+function buildAssigneeFilterOptions() {
+    const select = document.getElementById('assigneeFilter');
+    if (!select) return;
+    const names = Array.from(new Set(cards
+        .map(c => (c.assignee || '').trim())
+        .filter(n => n.length > 0)
+        .map(n => n.toLowerCase()))).sort();
+    // Preserve selection
+    const prev = currentAssigneeFilter;
+    // Reset to default options
+    select.innerHTML = '<option value="ALL">All</option><option value="UNASSIGNED">Unassigned</option>' +
+        names.map(n => `<option value="${n}">${n}</option>`).join('');
+    // Restore selection if still present
+    if (prev && (prev === 'ALL' || prev === 'UNASSIGNED' || names.includes(prev))) {
+        currentAssigneeFilter = prev;
+        select.value = prev;
+    } else {
+        currentAssigneeFilter = 'ALL';
+        select.value = 'ALL';
+    }
+}
+
+// Wire up filter change
+document.getElementById('assigneeFilter')?.addEventListener('change', function() {
+    currentAssigneeFilter = this.value;
+    renderCards();
+});
+
+// Rebuild filter options when cards change
+const originalSaveCards = saveCards;
+saveCards = function() {
+    originalSaveCards.call(this);
+    buildAssigneeFilterOptions();
+};
+
+// Initial population of assignee filter
+buildAssigneeFilterOptions();
 
 // Auto-sync on page load if hash exists (without UI)
 if (syncManager.hasHash()) {
