@@ -5,6 +5,8 @@ let currentColumn = null;
 let draggedCard = null;
 let currentBoardId = null;
 let selectedBackgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Default purple
+const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
+const IS_TOUCH = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 
 // Color themes
 const colorThemes = [
@@ -107,6 +109,16 @@ function truncateText(text, maxLength) {
 // Create card HTML
 function createCardHTML(card) {
     const truncatedDescription = truncateText(card.description || '', 150);
+    const moveButtons = IS_TOUCH
+        ? `
+            <button class="card-action-btn" onclick="moveCardLeft('${card.id}')" title="Move left" aria-label="Move left">
+                <i class="bi bi-arrow-left-circle"></i>
+            </button>
+            <button class="card-action-btn" onclick="moveCardRight('${card.id}')" title="Move right" aria-label="Move right">
+                <i class="bi bi-arrow-right-circle"></i>
+            </button>
+          `
+        : '';
     
     return `
         <div class="card" draggable="true" data-card-id="${card.id}">
@@ -115,8 +127,13 @@ function createCardHTML(card) {
                 <div class="card-description">${truncatedDescription}</div>
             </div>
             <div class="card-actions">
-                <button class="card-action-btn" onclick="editCard('${card.id}')">Edit</button>
-                <button class="card-action-btn" onclick="deleteCardConfirm('${card.id}')">Delete</button>
+                ${moveButtons}
+                <button class="card-action-btn" onclick="editCard('${card.id}')" title="Edit" aria-label="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="card-action-btn" onclick="deleteCardConfirm('${card.id}')" title="Delete" aria-label="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
             </div>
             <div class="card-timestamp">${formatDate(card.createdAt)}</div>
         </div>
@@ -125,9 +142,7 @@ function createCardHTML(card) {
 
 // Render all cards
 function renderCards() {
-    const columns = ['backlog', 'todo', 'doing', 'done'];
-    
-    columns.forEach(column => {
+    COLUMNS.forEach(column => {
         const container = document.getElementById(`${column}-cards`);
         const columnCards = cards.filter(card => card.column === column);
         container.innerHTML = columnCards.map(createCardHTML).join('');
@@ -145,9 +160,7 @@ function renderCards() {
 
 // Show or don't show buttons
 function updateMassDeleteButtons() {
-    const columns = ['backlog', 'todo', 'doing', 'done'];
-    
-    columns.forEach(column => {
+    COLUMNS.forEach(column => {
         const columnCards = cards.filter(card => card.column === column);
         const massDeleteBtn = document.getElementById(`${column}-mass-delete`);
         
@@ -158,6 +171,27 @@ function updateMassDeleteButtons() {
         }
     });
 }
+
+// Move card helpers (mobile-friendly)
+function getColumnIndex(column) {
+    return COLUMNS.indexOf(column);
+}
+
+function moveCard(cardId, direction) {
+    const idx = cards.findIndex(c => c.id === cardId);
+    if (idx === -1) return;
+    const current = cards[idx];
+    const colIndex = getColumnIndex(current.column);
+    const newIndex = colIndex + direction;
+    if (newIndex < 0 || newIndex >= COLUMNS.length) return;
+    current.column = COLUMNS[newIndex];
+    current.updatedAt = new Date().toISOString();
+    saveCards();
+    renderCards();
+}
+
+function moveCardLeft(cardId) { moveCard(cardId, -1); }
+function moveCardRight(cardId) { moveCard(cardId, 1); }
 
 // Mass delete all cards in a specific column
 function massDeleteCards(column) {
@@ -362,7 +396,7 @@ function handleDragEnd(e) {
     draggedCard = null;
 }
 
-// Add drag and drop listeners to columns
+// Add drag and drop listeners to columns (desktop primarily)
 document.querySelectorAll('.column').forEach(column => {
     column.addEventListener('dragover', handleDragOver);
     column.addEventListener('drop', handleDrop);

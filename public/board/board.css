@@ -220,17 +220,21 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
 .card-action-btn {
-    background: none;
+    background: rgba(0,0,0,0.03);
     border: none;
-    color: #666;
+    color: #555;
     cursor: pointer;
-    font-size: 0.8rem;
-    padding: 2px 5px;
-    border-radius: 3px;
-    transition: background 0.2s;
+    font-size: 0.95rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .card-action-btn:hover {
@@ -430,6 +434,20 @@ body {
         max-width: none;
     }
     
+    .card-actions {
+        gap: 8px;
+    }
+
+    .card-action-btn {
+        padding: 10px 12px; /* larger tap targets */
+        font-size: 1.05rem;
+    }
+
+    .card-description {
+        -webkit-line-clamp: 6;
+        line-clamp: 6;
+    }
+
     .header h1 {
         font-size: 2rem;
     }
@@ -460,8 +478,5 @@ body {
         flex-direction: column;
     }
 
-    .btn {
-        width: 100%;
-        margin-bottom: 5px;
-    }
+    .btn { width: 100%; margin-bottom: 5px; }
 }
