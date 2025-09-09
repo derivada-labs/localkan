@@ -139,22 +139,10 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     overflow-x: auto;
-.filters-container { position: relative; }
-.filters-panel {
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: #fff;
-    color: #111827;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    padding: 12px;
-    min-width: 280px;
-    z-index: 1000;
-}
-.filter-btn { display: inline-flex; align-items:center; gap:6px; }
     padding-bottom: 20px;
 }
+
+.filter-btn { display: inline-flex; align-items:center; gap:6px; }
 
 .column {
     width: clamp(260px, 28vw, 320px);

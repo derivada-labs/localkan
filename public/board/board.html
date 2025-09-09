@@ -24,11 +24,11 @@
                     <i class="bi bi-arrow-repeat me-1"></i>
                     Sync
                 </button>
-                <div id="filtersContainer" class="filters-container position-relative">
-                    <button class="btn btn-outline-light filter-btn" onclick="toggleFilters()" title="Show Filters">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle filter-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Show Filters">
                         <i class="bi bi-funnel me-1"></i>Filter
                     </button>
-                    <div id="filtersPanel" class="filters-panel" style="display: none;">
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 280px;">
                         <div class="assignee-filter d-flex align-items-center gap-2 mb-2">
                             <label for="assigneeFilter" class="text-muted small mb-0">Assignees</label>
                             <select id="assigneeFilter" multiple class="form-select form-select-sm" style="width: 220px;" title="Select none or 'All' for no filter">

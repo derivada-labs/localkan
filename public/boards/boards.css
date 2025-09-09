@@ -321,6 +321,32 @@ body {
     min-height: 40px;
 }
 
+/* Board card assignees (aggregated) */
+.board-assignees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.board-assignees .assignee-chip {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+}
+
+.board-assignees .assignee-chip.more-chip {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+}
+
 .board-stats {
     display: flex;
     gap: 15px;
@@ -646,6 +672,11 @@ body {
 
 .assignee-filter select.form-select option {
     color: #000;
+}
+
+/* Ensure dropdown aligns nicely in the header */
+.dropdown .dropdown-menu {
+    border-radius: 12px;
 }
 
 @media (max-width: 768px) {

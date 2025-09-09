@@ -137,6 +137,67 @@ function getAllAssignees() {
     return Array.from(names).sort();
 }
 
+// Escape HTML for safe rendering
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Get unique assignees for a specific board (case-insensitive dedupe, keep first casing)
+function getBoardAssignees(boardId) {
+    const cards = JSON.parse(localStorage.getItem(`kanbanCards_${boardId}`)) || [];
+    const seen = new Set();
+    const result = [];
+    for (const c of cards) {
+        let list = [];
+        if (Array.isArray(c.assignees)) {
+            list = c.assignees.filter(x => typeof x === 'string' && x.trim());
+        } else if (typeof c.assignee === 'string' && c.assignee.trim()) {
+            list = [c.assignee];
+        }
+        for (const name of list) {
+            const key = name.trim().toLowerCase();
+            if (key && !seen.has(key)) {
+                seen.add(key);
+                result.push(name.trim());
+            }
+        }
+    }
+    // Also include board-level defaultAssignees (fallback if no cards yet)
+    const board = boards.find(b => b.id === boardId);
+    let defaults = [];
+    if (board) {
+        if (Array.isArray(board.defaultAssignees)) {
+            defaults = board.defaultAssignees;
+        } else if (typeof board.defaultAssignees === 'string') {
+            defaults = board.defaultAssignees.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        for (const name of defaults) {
+            const key = name.trim().toLowerCase();
+            if (key && !seen.has(key)) {
+                seen.add(key);
+                result.push(name.trim());
+            }
+        }
+    }
+    // sort alphabetically, case-insensitive
+    result.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    return result;
+}
+
+function renderAssigneeChips(names, max = 5) {
+    if (!Array.isArray(names) || names.length === 0) return '';
+    const shown = names.slice(0, max);
+    const extra = names.length - shown.length;
+    const chips = shown.map(n => `<span class="assignee-chip"><i class="bi bi-person"></i> ${escapeHtml(n)}</span>`).join('');
+    const more = extra > 0 ? `<span class="assignee-chip more-chip">+${extra} more</span>` : '';
+    return `<div class="board-assignees">${chips}${more}</div>`;
+}
+
 function boardMatchesAssigneeFilter(board) {
     if (!Array.isArray(dashboardAssigneeFilter) || dashboardAssigneeFilter.length === 0 || dashboardAssigneeFilter.includes('ALL')) return true; // no filters => show all
     const cards = JSON.parse(localStorage.getItem(`kanbanCards_${board.id}`)) || [];
@@ -171,6 +232,7 @@ function buildDashboardAssigneeFilter() {
 function createBoardCardHTML(board) {
     const stats = getBoardStats(board.id);
     const backgroundColor = board.backgroundColor || 'rgba(255, 255, 255, 0.15)';
+    const assignees = getBoardAssignees(board.id);
     
     return `
         <div class="board-card" onclick="openBoard('${board.id}')" style="background: ${backgroundColor}">
@@ -181,6 +243,7 @@ function createBoardCardHTML(board) {
                 </div>
             </div>
             <div class="board-description">${board.description || 'No description provided'}</div>
+            ${renderAssigneeChips(assignees)}
             <div class="board-stats">
                 <div class="stat">
                     <i class="bi bi-card-list"></i>
@@ -221,7 +284,7 @@ function renderColorPicker(selectedColor = colorThemes[0].gradient) {
     colorPicker.innerHTML = colorThemes.map((theme, index) => `
         <div class="color-option ${theme.gradient === selectedColor ? 'selected' : ''}" 
              style="background: ${theme.gradient}" 
-             onclick="selectColor('${theme.gradient}')"
+             onclick="selectColor(event, '${theme.gradient}')"
              title="${theme.name}">
         </div>
     `).join('');
@@ -234,25 +297,26 @@ function renderWorkspaceColorPicker(selectedColor = colorThemes[0].gradient) {
     colorPicker.innerHTML = colorThemes.map((theme, index) => `
         <div class="color-option ${theme.gradient === selectedColor ? 'selected' : ''}" 
              style="background: ${theme.gradient}" 
-             onclick="selectWorkspaceColor('${theme.gradient}')"
+             onclick="selectWorkspaceColor(event, '${theme.gradient}')"
              title="${theme.name}">
         </div>
     `).join('');
 }
 
 // Select color theme
-function selectColor(gradient) {
+function selectColor(evt, gradient) {
     selectedBackgroundColor = gradient;
     
     // Update color picker UI
     document.querySelectorAll('#colorPicker .color-option').forEach(option => {
         option.classList.remove('selected');
     });
-    event.target.classList.add('selected');
+    const el = evt?.currentTarget || evt?.target;
+    if (el && el.classList) el.classList.add('selected');
 }
 
 // Select workspace color theme
-function selectWorkspaceColor(gradient) {
+function selectWorkspaceColor(evt, gradient) {
     selectedWorkspaceColor = gradient;
     
     // Update background immediately
@@ -262,7 +326,8 @@ function selectWorkspaceColor(gradient) {
     document.querySelectorAll('#workspaceColorPicker .color-option').forEach(option => {
         option.classList.remove('selected');
     });
-    event.target.classList.add('selected');
+    const el = evt?.currentTarget || evt?.target;
+    if (el && el.classList) el.classList.add('selected');
 }
 
 // Workspace modal functions
@@ -320,6 +385,8 @@ function openCreateBoardModal() {
     document.getElementById('modalTitle').textContent = 'Create New Board';
     document.getElementById('boardTitle').value = '';
     document.getElementById('boardDescription').value = '';
+    const defaultAssigneesInput = document.getElementById('boardDefaultAssignees');
+    if (defaultAssigneesInput) defaultAssigneesInput.value = '';
     document.getElementById('deleteBoardBtn').style.display = 'none';
     document.getElementById('saveBoardBtn').textContent = 'Create Board';
     renderColorPicker(selectedBackgroundColor);
@@ -391,6 +458,8 @@ function editBoard(boardId) {
     document.getElementById('modalTitle').textContent = 'Edit Board';
     document.getElementById('boardTitle').value = board.title;
     document.getElementById('boardDescription').value = board.description || '';
+    const defaultAssigneesInput = document.getElementById('boardDefaultAssignees');
+    if (defaultAssigneesInput) defaultAssigneesInput.value = Array.isArray(board.defaultAssignees) ? board.defaultAssignees.join(', ') : (board.defaultAssignees || '');
     document.getElementById('deleteBoardBtn').style.display = 'inline-block';
     document.getElementById('saveBoardBtn').textContent = 'Update Board';
     renderColorPicker(selectedBackgroundColor);
@@ -411,6 +480,8 @@ function deleteBoardFromModal() {
 function submitBoardForm() {
     const title = document.getElementById('boardTitle').value.trim();
     const description = document.getElementById('boardDescription').value.trim();
+    const defaultAssigneesRaw = (document.getElementById('boardDefaultAssignees')?.value || '');
+    const defaultAssignees = defaultAssigneesRaw.split(',').map(s => s.trim()).filter(Boolean);
     
     if (!title) return;
 
@@ -421,6 +492,7 @@ function submitBoardForm() {
             boards[boardIndex].title = title;
             boards[boardIndex].description = description;
             boards[boardIndex].backgroundColor = selectedBackgroundColor;
+            boards[boardIndex].defaultAssignees = defaultAssignees;
             boards[boardIndex].updatedAt = new Date().toISOString();
         }
     } else {
@@ -430,6 +502,7 @@ function submitBoardForm() {
             title: title,
             description: description,
             backgroundColor: selectedBackgroundColor,
+            defaultAssignees: defaultAssignees,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -1042,19 +1115,4 @@ saveBoards = function() {
     buildDashboardAssigneeFilter();
 };
 
-// Dashboard filter dropdown toggle and outside click handler
-function toggleDashboardFilters() {
-    const panel = document.getElementById('dashboardFiltersPanel');
-    if (!panel) return;
-    const visible = panel.style.display !== 'none';
-    panel.style.display = visible ? 'none' : 'block';
-}
-
-document.addEventListener('click', (e) => {
-    const container = document.getElementById('dashboardFiltersContainer');
-    const panel = document.getElementById('dashboardFiltersPanel');
-    if (!container || !panel) return;
-    if (!container.contains(e.target)) {
-        panel.style.display = 'none';
-    }
-});
+// Bootstrap handles dropdown open/close behavior for filters

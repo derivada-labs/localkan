@@ -36,12 +36,12 @@
                     <i class="bi bi-arrow-repeat"></i>
                     <span>Sync Now</span>
                 </button>
-                <div id="dashboardFiltersContainer" class="filters-container position-relative d-none d-md-block">
-                    <button class="action-button" onclick="toggleDashboardFilters()" title="Show Filters">
+                <div class="dropdown d-none d-md-block">
+                    <button class="action-button dropdown-toggle" data-bs-toggle="dropdown" title="Show Filters">
                         <i class="bi bi-funnel"></i>
                         <span>Filter</span>
                     </button>
-                    <div id="dashboardFiltersPanel" class="filters-panel" style="display: none;">
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 280px;">
                         <div class="assignee-filter d-flex align-items-center gap-2 mb-2">
                             <label for="dashboardAssigneeFilter" class="text-muted small mb-0">Assignees</label>
                             <select id="dashboardAssigneeFilter" multiple class="form-select form-select-sm" style="width: 220px;" title="Filter boards by assignees; choose 'All' to clear filter">
@@ -82,6 +82,11 @@
                             <textarea id="boardDescription" class="form-control" placeholder="What is this board about? (optional)"></textarea>
                         </div>
                         <div class="form-group mb-3">
+                            <label for="boardDefaultAssignees" class="form-label">Default Assignees</label>
+                            <input type="text" id="boardDefaultAssignees" class="form-control" placeholder="Comma-separated names (e.g., Alice, Bob)">
+                            <div class="form-text">Used to pre-fill assignees when creating new cards.</div>
+                        </div>
+                        <div class="form-group mb-3">
                             <label class="form-label">Background Color</label>
                             <div class="color-picker-grid" id="colorPicker">
                                 <!-- Color options will be rendered here -->
@@ -92,7 +97,7 @@
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBoardBtn" onclick="deleteBoardFromModal()" style="display: none;">Delete Board</button>
-                    <button type="button" class="btn btn-primary" id="saveBoardBtn" onclick="submitBoardForm()">Create Board</button>
+                    <button type="submit" class="btn btn-primary" id="saveBoardBtn" form="boardForm">Create Board</button>
                 </div>
             </div>
         </div>

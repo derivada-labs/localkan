@@ -252,14 +252,14 @@ function renderColorPicker() {
     colorPicker.innerHTML = colorThemes.map((theme, index) => `
         <div class="color-option ${theme.gradient === selectedBackgroundColor ? 'selected' : ''}" 
              style="background: ${theme.gradient}" 
-             onclick="selectColor('${theme.gradient}')"
+             onclick="selectColor(event, '${theme.gradient}')"
              title="${theme.name}">
         </div>
     `).join('');
 }
 
 // Select color theme
-function selectColor(gradient) {
+function selectColor(evt, gradient) {
     selectedBackgroundColor = gradient;
     
     // Update background immediately
@@ -269,7 +269,8 @@ function selectColor(gradient) {
     document.querySelectorAll('.color-option').forEach(option => {
         option.classList.remove('selected');
     });
-    event.target.classList.add('selected');
+    const el = evt?.currentTarget || evt?.target;
+    if (el && el.classList) el.classList.add('selected');
 }
 
 // Settings modal functions
@@ -321,7 +322,15 @@ function openAddCardModal(column) {
     document.getElementById('cardDescription').value = '';
     const assigneeInput = document.getElementById('cardAssignees');
     const prioritySelect = document.getElementById('cardPriority');
-    if (assigneeInput) assigneeInput.value = '';
+    if (assigneeInput) {
+        // Prefill from board default assignees when available
+        const boards = JSON.parse(localStorage.getItem('kanbanBoards')) || [];
+        const currentBoard = boards.find(b => b.id === currentBoardId);
+        const defaults = Array.isArray(currentBoard?.defaultAssignees)
+            ? currentBoard.defaultAssignees
+            : (typeof currentBoard?.defaultAssignees === 'string' ? currentBoard.defaultAssignees.split(',').map(s => s.trim()).filter(Boolean) : []);
+        assigneeInput.value = defaults.join(', ');
+    }
     if (prioritySelect) prioritySelect.value = '0';
     document.getElementById('deleteBtn').style.display = 'none';
     document.getElementById('saveBtn').textContent = 'Save Card';
@@ -738,22 +747,5 @@ buildAssigneeFilterOptions();
 if (syncManager.hasHash()) {
     syncManager.syncData(false);
 }
-
-// Filter dropdown toggle and outside click handler
-function toggleFilters() {
-    const panel = document.getElementById('filtersPanel');
-    if (!panel) return;
-    const visible = panel.style.display !== 'none';
-    panel.style.display = visible ? 'none' : 'block';
-}
-
-document.addEventListener('click', (e) => {
-    const container = document.getElementById('filtersContainer');
-    const panel = document.getElementById('filtersPanel');
-    if (!container || !panel) return;
-    if (!container.contains(e.target)) {
-        panel.style.display = 'none';
-    }
-});
 
 // Bootstrap modals handle backdrop clicks automatically
