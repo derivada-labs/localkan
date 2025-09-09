@@ -460,7 +460,7 @@ function openHashModal() {
                        style="text-transform: uppercase;" maxlength="20">
             </div>
             
-            <div class="modal-actions">
+            <div class="kb-modal-actions">
                 <button class="btn btn-secondary" onclick="closeHashModal()">Close</button>
                 <button class="btn btn-danger" onclick="createNewHashWithWarning()">
                     Create New ID
@@ -504,7 +504,7 @@ function openHashModal() {
                 </div>
             </div>
             
-            <div class="modal-actions" style="margin-top: 20px;">
+            <div class="kb-modal-actions" style="margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeHashModal()" style="width: 100%;">Cancel</button>
             </div>
         `;
