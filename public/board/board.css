@@ -24,11 +24,12 @@ body {
 .header-content {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 20px;
     max-width: 1400px;
     margin: 0 auto;
     position: relative;
+    min-height: 64px;
 }
 
 .header-actions {
@@ -61,6 +62,16 @@ body {
     font-weight: 300;
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    max-width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none; /* ensure side buttons are easily clickable */
 }
 
 .settings-btn, .sync-btn, .hash-btn {
@@ -101,9 +112,9 @@ body {
 }
 
 .column {
-    width: 300px;
-    max-width: 300px;
-    min-width: 300px;
+    width: clamp(260px, 28vw, 320px);
+    max-width: clamp(260px, 28vw, 320px);
+    min-width: clamp(260px, 28vw, 320px);
     background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 15px;
@@ -435,6 +446,14 @@ body {
         gap: 15px;
     }
     
+    .header h1 {
+        position: static;
+        transform: none;
+        max-width: 100%;
+        white-space: normal;
+        pointer-events: auto;
+    }
+
     .column {
         min-width: auto;
         width: 100%;
@@ -490,4 +509,9 @@ body {
     }
 
     .btn { width: 100%; margin-bottom: 5px; }
+}
+
+/* Medium screens: slightly tighter gaps to fit more columns */
+@media (max-width: 1200px) and (min-width: 769px) {
+    .board { gap: 16px; }
 }
