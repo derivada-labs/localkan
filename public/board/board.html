@@ -15,7 +15,7 @@
                 Boards
             </button>
             <h1 id="boardTitle">Kanban Todo Board</h1>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="header-actions">
                 <button class="hash-btn" onclick="openHashModal()" title="Manage Sync ID">
                     <i class="bi bi-cloud-plus-fill me-1"></i>
                     <span id="hashButtonText">Setup</span>
@@ -119,7 +119,10 @@
                 </div>
                 <div class="kb-modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
-                    <button type="button" class="btn btn-danger" onclick="deleteBoardFromSettings()">Delete Board</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteBoardFromSettings()">
+                        <i class="bi bi-trash-fill me-1"></i>
+                        Delete Board
+                    </button>
                     <button type="submit" class="btn btn-primary">Update Board</button>
                 </div>
             </form>

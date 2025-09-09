@@ -31,14 +31,21 @@ body {
     position: relative;
 }
 
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-left: auto; /* push actions to the right */
+}
+
 .back-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    padding: 10px 15px;
+    padding: 12px 18px; /* match other header buttons */
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: background 0.2s;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -60,10 +67,10 @@ body {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    padding: 10px 15px;
+    padding: 12px 18px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: background 0.2s;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -455,6 +462,10 @@ body {
     .header-content {
         flex-direction: column;
         gap: 15px;
+    }
+
+    .header-actions {
+        margin-left: 0;
     }
 
     .settings-btn {
