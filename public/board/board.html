@@ -4,18 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Todo Board</title>
-    <!-- Custom CSS -->
+    <!-- Custom CSS (includes Bootstrap via @import) -->
     <link rel="stylesheet" href="/board/board.css">
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <button class="back-btn" onclick="goBackToBoards()" title="Back to Boards">← Boards</button>
+            <button class="back-btn" onclick="goBackToBoards()" title="Back to Boards">
+                <i class="bi bi-arrow-left-short" style="font-size:1.2rem; vertical-align: -2px;"></i>
+                Boards
+            </button>
             <h1 id="boardTitle">Kanban Todo Board</h1>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <button class="hash-btn" onclick="openHashModal()" title="Manage Sync ID">🔑 <span id="hashButtonText">Setup</span></button>
-                <button class="sync-btn" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>☁️ Sync</button>
-                <button class="settings-btn" onclick="openSettingsModal()" title="Board Settings">⚙️ Settings</button>
+                <button class="hash-btn" onclick="openHashModal()" title="Manage Sync ID">
+                    <i class="bi bi-cloud-plus-fill me-1"></i>
+                    <span id="hashButtonText">Setup</span>
+                </button>
+                <button class="sync-btn" onclick="handleSync()" title="Sync with cloud" id="syncButton" disabled>
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Sync
+                </button>
+                <button class="settings-btn" onclick="openSettingsModal()" title="Board Settings">
+                    <i class="bi bi-gear-fill me-1"></i>
+                    Settings
+                </button>
             </div>
         </div>
     </div>
@@ -131,5 +143,7 @@
     <script src="/shared/sync.js"></script>
     <!-- Page-specific JavaScript -->
     <script src="/board/board.js"></script>
+    <!-- Bootstrap JS (align with boards page; CSS is imported via board.css) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
