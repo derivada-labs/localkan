@@ -12,123 +12,200 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Redis client
-const redis = new Redis({
-    url: process.env.KV_REST_API_URL,
-    token: process.env.KV_REST_API_TOKEN,
-});
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-const DATA_DIR = path.join(__dirname, 'data');
-
-// Ensure data directory exists
-fs.ensureDirSync(DATA_DIR);
-
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Specific routes for boards and board directories
-app.use('/boards', express.static(path.join(__dirname, 'public', 'boards')));
-app.use('/board', express.static(path.join(__dirname, 'public', 'board')));
-
-// Root route - serve the main boards page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'boards', 'boards.html'));
-});
-
-// Boards route - serve the boards page
-app.get('/boards', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'boards', 'boards.html'));
-});
-
-// Board route - serve the individual board page
-app.get('/board', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'board', 'board.html'));
-});
-
-// Validate and sanitize hash
-function sanitizeHash(hash) {
-    if (!hash || typeof hash !== 'string') {
-        return null;
+// Configuration constants
+const CONFIG = {
+    PORT: process.env.PORT || 3001,
+    DATA_DIR: path.join(__dirname, 'data'),
+    JSON_LIMIT: '10mb',
+    HASH_MIN_LENGTH: 6,
+    HASH_MAX_LENGTH: 20,
+    VERSION: '2.0.0',
+    REDIS: {
+        URL: process.env.KV_REST_API_URL,
+        TOKEN: process.env.KV_REST_API_TOKEN
     }
-    // Allow only alphanumeric characters, convert to lowercase
-    const sanitized = hash.toLowerCase().replace(/[^a-z0-9]/g, '');
-    // Ensure hash is between 6 and 20 characters
-    if (sanitized.length < 6 || sanitized.length > 20) {
-        return null;
+};
+
+// Redis client with connection management
+class RedisManager {
+    constructor() {
+        this.client = null;
+        this.isConnected = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectInterval = 5000;
     }
-    return sanitized;
+    
+    async connect() {
+        try {
+            this.client = new Redis({
+                url: CONFIG.REDIS.URL,
+                token: CONFIG.REDIS.TOKEN,
+                retry: {
+                    retries: this.maxReconnectAttempts,
+                    delay: (attempt) => Math.min(attempt * 50, 500)
+                }
+            });
+            
+            // Test connection
+            await this.client.ping();
+            this.isConnected = true;
+            this.reconnectAttempts = 0;
+            console.log('🟢 Redis connected successfully');
+            
+            return this.client;
+        } catch (error) {
+            this.isConnected = false;
+            console.error('🔴 Redis connection failed:', error.message);
+            throw error;
+        }
+    }
+    
+    async ensureConnection() {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        return this.client;
+    }
+    
+    disconnect() {
+        if (this.client && typeof this.client.disconnect === 'function') {
+            this.client.disconnect();
+            this.isConnected = false;
+        }
+    }
 }
 
-// Health check endpoint
-app.get('/api/sync/status', async (req, res) => {
-    try {
-        // Test Redis connection
+const redisManager = new RedisManager();
+let redis;
+
+// Initialize Redis connection
+try {
+    redis = await redisManager.connect();
+} catch (error) {
+    console.error('🔴 Failed to initialize Redis client:', error.message);
+    process.exit(1);
+}
+
+// Ensure data directory exists
+fs.ensureDirSync(CONFIG.DATA_DIR);
+
+const app = express();
+
+// Middleware setup
+function setupMiddleware(app) {
+    // CORS middleware
+    app.use(cors({
+        origin: process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGINS?.split(',') : true,
+        credentials: true
+    }));
+    
+    // JSON parsing middleware
+    app.use(express.json({ 
+        limit: CONFIG.JSON_LIMIT,
+        verify: (req, res, buf) => {
+            req.rawBody = buf;
+        }
+    }));
+    
+    // Request logging middleware
+    app.use((req, res, next) => {
+        const start = Date.now();
+        res.on('finish', () => {
+            const duration = Date.now() - start;
+            console.log(`${new Date().toISOString()} ${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
+        });
+        next();
+    });
+    
+    // Static file serving
+    app.use(express.static(path.join(__dirname, 'public')));
+    app.use('/boards', express.static(path.join(__dirname, 'public', 'boards')));
+    app.use('/board', express.static(path.join(__dirname, 'public', 'board')));
+}
+
+// Error handling middleware
+function setupErrorHandling(app) {
+    // Global error handler
+    app.use((err, req, res, next) => {
+        console.error(`${new Date().toISOString()} ERROR:`, err.stack);
+        
+        if (res.headersSent) {
+            return next(err);
+        }
+        
+        const statusCode = err.statusCode || err.status || 500;
+        const message = process.env.NODE_ENV === 'production' && statusCode === 500 
+            ? 'Internal Server Error' 
+            : err.message;
+            
+        res.status(statusCode).json({
+            error: message,
+            timestamp: new Date().toISOString()
+        });
+    });
+    
+    // 404 handler
+    app.use((req, res) => {
+        res.status(404).json({
+            error: 'Not Found',
+            path: req.path,
+            timestamp: new Date().toISOString()
+        });
+    });
+}
+
+setupMiddleware(app);
+
+// Route handlers
+const routeHandlers = {
+    // Static page routes
+    serveBoardsPage: (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'boards', 'boards.html'));
+    },
+    
+    serveBoardPage: (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'board', 'board.html'));
+    },
+    
+    // API routes
+    getStatus: asyncHandler(async (req, res) => {
         const pingResult = await redis.ping();
         
         res.json({ 
             status: 'online', 
             serverTime: Date.now(),
-            version: '2.0.0', // Updated version for multi-user support
+            version: CONFIG.VERSION,
             storage: 'redis',
             redis: pingResult === 'PONG' ? 'connected' : 'disconnected'
         });
-    } catch (error) {
-        res.status(500).json({ 
-            status: 'error', 
-            serverTime: Date.now(),
-            version: '2.0.0',
-            storage: 'redis',
-            redis: 'disconnected',
-            error: error.message
-        });
-    }
-});
-
-// Check if hash exists
-app.get('/api/sync/check/:hash', async (req, res) => {
-    try {
+    }),
+    
+    checkHash: asyncHandler(async (req, res) => {
         const hash = sanitizeHash(req.params.hash);
         
         if (!hash) {
-            return res.status(400).json({ 
-                exists: false, 
-                error: 'Invalid hash format' 
-            });
+            throw createError('Invalid hash format');
         }
         
-        // Check if data exists in Redis
         const exists = await redis.exists(`sync:${hash}`);
         
         res.json({ 
             exists: exists === 1,
             hash 
         });
-    } catch (error) {
-        console.error('Error checking hash:', error);
-        res.status(500).json({ error: 'Failed to check hash' });
-    }
-});
-
-// Get sync data for specific hash
-app.get('/api/sync/data/:hash', async (req, res) => {
-    try {
+    }),
+    
+    getSyncData: asyncHandler(async (req, res) => {
         const hash = sanitizeHash(req.params.hash);
         
         if (!hash) {
-            return res.status(400).json({ error: 'Invalid hash format' });
+            throw createError('Invalid hash format');
         }
         
-        // Get data from Redis
         const syncData = await redis.get(`sync:${hash}`);
         
         if (!syncData) {
-            // Return empty data with zero timestamp
             return res.json({
                 timestamp: 0,
                 hash,
@@ -140,40 +217,30 @@ app.get('/api/sync/data/:hash', async (req, res) => {
             });
         }
         
-        // Return existing data
         const data = typeof syncData === 'string' ? JSON.parse(syncData) : syncData;
-        data.hash = hash; // Include hash in response
+        data.hash = hash;
         res.json(data);
-    } catch (error) {
-        console.error('Error reading sync data:', error);
-        res.status(500).json({ error: 'Failed to read sync data' });
-    }
-});
-
-// Update sync data for specific hash
-app.post('/api/sync/data/:hash', async (req, res) => {
-    try {
+    }),
+    
+    updateSyncData: asyncHandler(async (req, res) => {
         const hash = sanitizeHash(req.params.hash);
         
         if (!hash) {
-            return res.status(400).json({ error: 'Invalid hash format' });
+            throw createError('Invalid hash format');
         }
         
         const { timestamp, data } = req.body;
         
-        // Validate request
         if (!timestamp || !data) {
-            return res.status(400).json({ error: 'Missing timestamp or data' });
+            throw createError('Missing timestamp or data');
         }
         
-        // Check if existing data is newer
         const existingData = await redis.get(`sync:${hash}`);
         
         if (existingData) {
             const parsed = typeof existingData === 'string' ? JSON.parse(existingData) : existingData;
             
             if (parsed.timestamp > timestamp) {
-                // Server data is newer, don't update
                 return res.json({
                     success: false,
                     message: 'Server data is newer',
@@ -183,7 +250,6 @@ app.post('/api/sync/data/:hash', async (req, res) => {
             }
         }
         
-        // Save new data to Redis
         const syncData = {
             timestamp,
             data,
@@ -199,30 +265,109 @@ app.post('/api/sync/data/:hash', async (req, res) => {
             timestamp,
             hash
         });
-    } catch (error) {
-        console.error('Error saving sync data:', error);
-        res.status(500).json({ error: 'Failed to save sync data' });
+    }),
+    
+    legacyEndpoint: (req, res) => {
+        res.status(400).json({ 
+            error: 'Hash required. Please update your client to version 2.0' 
+        });
     }
-});
+};
 
-// Legacy endpoints for backward compatibility (redirect to default hash)
-app.get('/api/sync/data', async (req, res) => {
-    res.status(400).json({ 
-        error: 'Hash required. Please update your client to version 2.0' 
-    });
-});
+// Define routes
+app.get('/', routeHandlers.serveBoardsPage);
+app.get('/boards', routeHandlers.serveBoardsPage);
+app.get('/board', routeHandlers.serveBoardPage);
 
-app.post('/api/sync/data', async (req, res) => {
-    res.status(400).json({ 
-        error: 'Hash required. Please update your client to version 2.0' 
-    });
+// Utility functions
+function sanitizeHash(hash) {
+    if (!hash || typeof hash !== 'string') {
+        return null;
+    }
+    const sanitized = hash.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (sanitized.length < CONFIG.HASH_MIN_LENGTH || sanitized.length > CONFIG.HASH_MAX_LENGTH) {
+        return null;
+    }
+    return sanitized;
+}
+
+function createError(message, statusCode = 400) {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    return error;
+}
+
+function asyncHandler(fn) {
+    return (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+}
+
+// API routes
+app.get('/api/sync/status', routeHandlers.getStatus);
+
+app.get('/api/sync/check/:hash', routeHandlers.checkHash);
+
+app.get('/api/sync/data/:hash', routeHandlers.getSyncData);
+
+app.post('/api/sync/data/:hash', routeHandlers.updateSyncData);
+
+// Legacy endpoints for backward compatibility
+app.get('/api/sync/data', routeHandlers.legacyEndpoint);
+app.post('/api/sync/data', routeHandlers.legacyEndpoint);
+
+// Setup error handling after all routes
+setupErrorHandling(app);
+
+// Graceful shutdown handling
+let server;
+const gracefulShutdown = (signal) => {
+    console.log(`\n📡 Received ${signal}. Starting graceful shutdown...`);
+    
+    if (server) {
+        server.close((err) => {
+            if (err) {
+                console.error('🔴 Error during server shutdown:', err);
+                process.exit(1);
+            }
+            
+            console.log('✅ Server closed successfully');
+            
+            // Close Redis connection
+            redisManager.disconnect();
+            console.log('✅ Redis connection closed');
+            
+            process.exit(0);
+        });
+        
+        // Force close after 10 seconds
+        setTimeout(() => {
+            console.error('🔴 Forced shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    } else {
+        process.exit(0);
+    }
+};
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+    console.error('🔴 Uncaught Exception:', err);
+    gracefulShutdown('uncaughtException');
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🔴 Unhandled Rejection at:', promise, 'reason:', reason);
+    gracefulShutdown('unhandledRejection');
 });
 
 // Start server
-app.listen(PORT, async () => {
-    console.log(`✅ Sync server running on http://localhost:${PORT}`);
+server = app.listen(CONFIG.PORT, async () => {
+    console.log(`✅ Sync server running on http://localhost:${CONFIG.PORT}`);
     console.log(`☁️  Using Upstash Redis for data storage`);
     console.log(`🔐 Multi-user mode enabled with hash-based isolation`);
+    console.log(`📦 Version: ${CONFIG.VERSION}`);
     
     // Test Redis connection
     try {
@@ -230,5 +375,6 @@ app.listen(PORT, async () => {
         console.log(`🟢 Redis connection successful`);
     } catch (error) {
         console.error(`🔴 Redis connection failed:`, error.message);
+        gracefulShutdown('Redis connection failed');
     }
 });
