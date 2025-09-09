@@ -71,11 +71,11 @@
     </div>
 
     <!-- Add/Edit Card Modal -->
-    <div id="cardModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title" id="modalTitle">Add New Card</span>
-                <span class="close" onclick="closeModal()">&times;</span>
+    <div id="cardModal" class="kb-modal">
+        <div class="kb-modal-content">
+            <div class="kb-modal-header">
+                <span class="kb-modal-title" id="modalTitle">Add New Card</span>
+                <span class="kb-close" onclick="closeModal()">&times;</span>
             </div>
             <form id="cardForm">
                 <div class="form-group">
@@ -86,7 +86,7 @@
                     <label for="cardDescription">Description</label>
                     <textarea id="cardDescription" placeholder="Optional description..."></textarea>
                 </div>
-                <div class="modal-actions">
+                <div class="kb-modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="button" class="btn btn-danger" id="deleteBtn" onclick="deleteCard()" style="display: none;">Delete</button>
                     <button type="submit" class="btn btn-primary" id="saveBtn">Save Card</button>
@@ -96,11 +96,11 @@
     </div>
 
     <!-- Board Settings Modal -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">Board Settings</span>
-                <span class="close" onclick="closeSettingsModal()">&times;</span>
+    <div id="settingsModal" class="kb-modal">
+        <div class="kb-modal-content">
+            <div class="kb-modal-header">
+                <span class="kb-modal-title">Board Settings</span>
+                <span class="kb-close" onclick="closeSettingsModal()">&times;</span>
             </div>
             <form id="boardSettingsForm">
                 <div class="form-group">
@@ -117,7 +117,7 @@
                         <!-- Color options will be rendered here -->
                     </div>
                 </div>
-                <div class="modal-actions">
+                <div class="kb-modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
                     <button type="button" class="btn btn-danger" onclick="deleteBoardFromSettings()">Delete Board</button>
                     <button type="submit" class="btn btn-primary">Update Board</button>
@@ -127,11 +127,11 @@
     </div>
 
     <!-- Hash Management Modal -->
-    <div id="hashModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">Sync ID Management</span>
-                <span class="close" onclick="closeHashModal()">&times;</span>
+    <div id="hashModal" class="kb-modal">
+        <div class="kb-modal-content">
+            <div class="kb-modal-header">
+                <span class="kb-modal-title">Sync ID Management</span>
+                <span class="kb-close" onclick="closeHashModal()">&times;</span>
             </div>
             <div id="hashModalContent">
                 <!-- Content will be dynamically generated -->

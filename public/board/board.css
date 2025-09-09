@@ -250,8 +250,8 @@ body {
     border: 2px dashed rgba(255, 255, 255, 0.5);
 }
 
-/* Modal Styles */
-.modal {
+/* Modal Styles (prefixed to avoid Bootstrap collisions) */
+.kb-modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -264,7 +264,7 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-.modal-content {
+.kb-modal-content {
     background-color: white;
     margin: 10% auto;
     padding: 30px;
@@ -275,20 +275,20 @@ body {
     min-height: fit-content;
 }
 
-.modal-header {
+.kb-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
 
-.modal-title {
+.kb-modal-title {
     font-size: 1.3rem;
     font-weight: 600;
     color: #333;
 }
 
-.close {
+.kb-close {
     color: #aaa;
     font-size: 28px;
     font-weight: bold;
@@ -296,7 +296,7 @@ body {
     line-height: 1;
 }
 
-.close:hover {
+.kb-close:hover {
     color: #000;
 }
 
@@ -326,7 +326,7 @@ body {
     min-height: 80px;
 }
 
-.modal-actions {
+.kb-modal-actions {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
@@ -449,14 +449,14 @@ body {
     }
 
     /* Mobile modal improvements */
-    .modal-content {
+    .kb-modal-content {
         margin: 5% auto;
         margin-bottom: 20px;
         width: 95%;
         padding: 20px;
     }
 
-    .modal-actions {
+    .kb-modal-actions {
         flex-direction: column;
     }
 
