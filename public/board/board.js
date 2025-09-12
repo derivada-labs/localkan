@@ -9,6 +9,15 @@ const COLUMNS = ['backlog', 'todo', 'doing', 'done'];
 const IS_TOUCH = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 let currentAssigneeFilter = []; // array of selected names; special 'UNASSIGNED' value
 
+// Mobile touch interaction variables
+let touchStartY = 0;
+let touchStartTime = 0;
+let pullToRefreshThreshold = 60;
+let isPulling = false;
+let touchCardId = null;
+let touchStartX = 0;
+let longPressTimer = null;
+
 // Color themes
 const colorThemes = [
     { name: 'Purple', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
@@ -747,5 +756,249 @@ buildAssigneeFilterOptions();
 if (syncManager.hasHash()) {
     syncManager.syncData(false);
 }
+
+// Enhanced Mobile Touch Interactions
+if (IS_TOUCH) {
+    // Pull-to-refresh functionality
+    let pullToRefreshElement = null;
+    
+    function createPullToRefreshIndicator() {
+        if (!pullToRefreshElement) {
+            pullToRefreshElement = document.createElement('div');
+            pullToRefreshElement.className = 'pull-to-refresh hidden';
+            pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Pull to sync';
+            document.body.appendChild(pullToRefreshElement);
+        }
+    }
+    
+    function handleTouchStart(e) {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartTime = Date.now();
+        isPulling = window.scrollY === 0;
+        
+        // Long press detection for cards
+        if (e.target.closest('.card')) {
+            touchCardId = e.target.closest('.card').dataset.cardId;
+            longPressTimer = setTimeout(() => {
+                if (touchCardId && 'vibrate' in navigator) {
+                    navigator.vibrate(50); // Haptic feedback
+                }
+                editCard(touchCardId);
+                longPressTimer = null;
+            }, 500);
+        }
+    }
+    
+    function handleTouchMove(e) {
+        if (!isPulling) return;
+        
+        const currentY = e.touches[0].clientY;
+        const diffY = currentY - touchStartY;
+        
+        if (diffY > 10) {
+            createPullToRefreshIndicator();
+            
+            if (diffY > pullToRefreshThreshold) {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Release to sync';
+                pullToRefreshElement.classList.remove('hidden');
+            } else {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Pull to sync';
+                pullToRefreshElement.classList.add('hidden');
+            }
+        }
+        
+        // Clear long press if user moves too much
+        if (longPressTimer && Math.abs(e.touches[0].clientX - touchStartX) > 10) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    }
+    
+    function handleTouchEnd(e) {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        
+        if (!isPulling) return;
+        
+        const endY = e.changedTouches[0].clientY;
+        const diffY = endY - touchStartY;
+        
+        if (pullToRefreshElement) {
+            if (diffY > pullToRefreshThreshold) {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Syncing...';
+                
+                if (syncManager.hasHash()) {
+                    handleSync().finally(() => {
+                        setTimeout(() => {
+                            if (pullToRefreshElement) {
+                                pullToRefreshElement.classList.add('hidden');
+                            }
+                        }, 1000);
+                    });
+                } else {
+                    setTimeout(() => {
+                        if (pullToRefreshElement) {
+                            pullToRefreshElement.classList.add('hidden');
+                        }
+                    }, 500);
+                }
+            } else {
+                pullToRefreshElement.classList.add('hidden');
+            }
+        }
+        
+        isPulling = false;
+    }
+    
+    // Swipe gesture for column navigation
+    function handleSwipeGesture(e) {
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+        const touchDuration = Date.now() - touchStartTime;
+        
+        // Detect horizontal swipe (must be faster and more horizontal than vertical)
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50 && touchDuration < 300) {
+            const columns = document.querySelectorAll('.column');
+            let currentVisible = null;
+            
+            // Find currently visible column (for mobile single-column layout)
+            columns.forEach((col, index) => {
+                const rect = col.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.5 && rect.bottom > window.innerHeight * 0.3) {
+                    currentVisible = index;
+                }
+            });
+            
+            if (currentVisible !== null) {
+                let targetColumn = currentVisible;
+                
+                if (diffX > 0 && currentVisible > 0) {
+                    // Swipe right - go to previous column
+                    targetColumn = currentVisible - 1;
+                } else if (diffX < 0 && currentVisible < columns.length - 1) {
+                    // Swipe left - go to next column
+                    targetColumn = currentVisible + 1;
+                }
+                
+                if (targetColumn !== currentVisible) {
+                    columns[targetColumn].scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'nearest' 
+                    });
+                    
+                    // Haptic feedback for swipe
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(30);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Add touch event listeners
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', function(e) {
+        handleTouchEnd(e);
+        handleSwipeGesture(e);
+    }, { passive: false });
+    
+    // Enhanced card touch interactions
+    function enhanceCardTouchEvents() {
+        document.querySelectorAll('.card').forEach(card => {
+            // Add haptic feedback on touch
+            card.addEventListener('touchstart', function(e) {
+                this.classList.add('haptic-feedback');
+                setTimeout(() => {
+                    this.classList.remove('haptic-feedback');
+                }, 150);
+                
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(10);
+                }
+            }, { passive: true });
+            
+            // Improve drag visualization for touch
+            if (card.draggable) {
+                card.addEventListener('dragstart', function(e) {
+                    this.classList.add('card-dragging');
+                });
+                
+                card.addEventListener('dragend', function(e) {
+                    this.classList.remove('card-dragging');
+                });
+            }
+        });
+    }
+    
+    // Enhance cards after each render
+    const originalRenderCards = renderCards;
+    renderCards = function() {
+        originalRenderCards.call(this);
+        enhanceCardTouchEvents();
+    };
+    
+    // Mobile keyboard handling
+    let originalViewportHeight = window.innerHeight;
+    
+    window.addEventListener('resize', function() {
+        // Detect virtual keyboard
+        if (window.innerHeight < originalViewportHeight * 0.75) {
+            document.body.classList.add('keyboard-open');
+        } else {
+            document.body.classList.remove('keyboard-open');
+            originalViewportHeight = window.innerHeight;
+        }
+    });
+    
+    // Improve form input experience on mobile
+    document.addEventListener('focusin', function(e) {
+        if (e.target.matches('input, textarea')) {
+            setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    });
+}
+
+// Add CSS for mobile enhancements
+const mobileCSS = `
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .keyboard-open .modal-content { height: 100vh; }
+    .keyboard-open .modal-body { flex: 1; overflow-y: auto; }
+    
+    @media (max-width: 768px) {
+        .column-scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .column-scroll-indicator.show {
+            opacity: 1;
+        }
+    }
+`;
+
+const mobileStyleSheet = document.createElement('style');
+mobileStyleSheet.textContent = mobileCSS;
+document.head.appendChild(mobileStyleSheet);
 
 // Bootstrap modals handle backdrop clicks automatically

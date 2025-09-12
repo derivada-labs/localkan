@@ -1116,3 +1116,190 @@ saveBoards = function() {
 };
 
 // Bootstrap handles dropdown open/close behavior for filters
+
+// Enhanced Mobile Touch Interactions for Dashboard
+const IS_TOUCH = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+if (IS_TOUCH) {
+    // Mobile touch interaction variables
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let pullToRefreshThreshold = 60;
+    let isPulling = false;
+    let touchStartX = 0;
+    let longPressTimer = null;
+    let pullToRefreshElement = null;
+    
+    function createPullToRefreshIndicator() {
+        if (!pullToRefreshElement) {
+            pullToRefreshElement = document.createElement('div');
+            pullToRefreshElement.className = 'pull-to-refresh hidden';
+            pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Pull to sync';
+            document.body.appendChild(pullToRefreshElement);
+        }
+    }
+    
+    function handleTouchStart(e) {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartTime = Date.now();
+        isPulling = window.scrollY === 0;
+        
+        // Long press detection for board cards
+        if (e.target.closest('.board-card:not(.create-board-card)')) {
+            const boardCard = e.target.closest('.board-card');
+            const boardId = boardCard.dataset.boardId;
+            
+            if (boardId) {
+                longPressTimer = setTimeout(() => {
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(50); // Haptic feedback
+                    }
+                    editBoard(boardId);
+                    longPressTimer = null;
+                }, 500);
+            }
+        }
+    }
+    
+    function handleTouchMove(e) {
+        if (!isPulling) {
+            // Clear long press if user moves too much
+            if (longPressTimer && Math.abs(e.touches[0].clientX - touchStartX) > 10) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            return;
+        }
+        
+        const currentY = e.touches[0].clientY;
+        const diffY = currentY - touchStartY;
+        
+        if (diffY > 10) {
+            createPullToRefreshIndicator();
+            
+            if (diffY > pullToRefreshThreshold) {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Release to sync';
+                pullToRefreshElement.classList.remove('hidden');
+            } else {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Pull to sync';
+                pullToRefreshElement.classList.add('hidden');
+            }
+        }
+    }
+    
+    function handleTouchEnd(e) {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        
+        if (!isPulling) return;
+        
+        const endY = e.changedTouches[0].clientY;
+        const diffY = endY - touchStartY;
+        
+        if (pullToRefreshElement) {
+            if (diffY > pullToRefreshThreshold) {
+                pullToRefreshElement.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Syncing...';
+                
+                if (syncManager.hasHash()) {
+                    handleSync().finally(() => {
+                        setTimeout(() => {
+                            if (pullToRefreshElement) {
+                                pullToRefreshElement.classList.add('hidden');
+                            }
+                        }, 1000);
+                    });
+                } else {
+                    setTimeout(() => {
+                        if (pullToRefreshElement) {
+                            pullToRefreshElement.classList.add('hidden');
+                        }
+                    }, 500);
+                }
+            } else {
+                pullToRefreshElement.classList.add('hidden');
+            }
+        }
+        
+        isPulling = false;
+    }
+    
+    // Add touch event listeners
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // Enhanced board card touch interactions
+    function enhanceBoardTouchEvents() {
+        document.querySelectorAll('.board-card').forEach(card => {
+            // Add haptic feedback on touch
+            card.addEventListener('touchstart', function(e) {
+                this.classList.add('haptic-feedback');
+                setTimeout(() => {
+                    this.classList.remove('haptic-feedback');
+                }, 150);
+                
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(10);
+                }
+            }, { passive: true });
+        });
+    }
+    
+    // Enhance board cards after each render
+    const originalRenderBoards = renderBoards;
+    renderBoards = function() {
+        originalRenderBoards.call(this);
+        enhanceBoardTouchEvents();
+    };
+    
+    // Mobile keyboard handling
+    let originalViewportHeight = window.innerHeight;
+    
+    window.addEventListener('resize', function() {
+        // Detect virtual keyboard
+        if (window.innerHeight < originalViewportHeight * 0.75) {
+            document.body.classList.add('keyboard-open');
+        } else {
+            document.body.classList.remove('keyboard-open');
+            originalViewportHeight = window.innerHeight;
+        }
+    });
+    
+    // Improve form input experience on mobile
+    document.addEventListener('focusin', function(e) {
+        if (e.target.matches('input, textarea')) {
+            setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    });
+    
+    // Add mobile-specific CSS
+    const mobileCSS = `
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .keyboard-open .modal-content { height: 100vh; }
+        .keyboard-open .modal-body { flex: 1; overflow-y: auto; }
+        
+        @media (max-width: 768px) {
+            .boards-grid {
+                scroll-snap-type: y mandatory;
+            }
+            
+            .board-card {
+                scroll-snap-align: start;
+            }
+        }
+    `;
+    
+    const mobileStyleSheet = document.createElement('style');
+    mobileStyleSheet.textContent = mobileCSS;
+    document.head.appendChild(mobileStyleSheet);
+    
+    // Initialize enhanced touch events
+    enhanceBoardTouchEvents();
+}
