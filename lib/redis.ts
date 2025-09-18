@@ -5,6 +5,10 @@ interface WorkspaceData {
   boards: Board[]
   workspaceName: string
   lastSync: string
+  settings?: {
+    backgroundColor?: string
+    [key: string]: any
+  }
 }
 
 interface Board {
@@ -57,12 +61,15 @@ class RedisClient {
 
 export const redisClient = new RedisClient()
 
-export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string): Promise<void> => {
+export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string, settings?: any): Promise<void> => {
   try {
     const data: WorkspaceData = {
       boards,
       workspaceName,
-      lastSync: new Date().toISOString()
+      lastSync: new Date().toISOString(),
+      settings: settings || {
+        backgroundColor: localStorage.getItem('workspace-background') || 'purple'
+      }
     }
     await redisClient.set(syncId, data)
   } catch (error) {
@@ -81,7 +88,13 @@ export const syncFromCloud = async (syncId: string): Promise<WorkspaceData | nul
 }
 
 export const generateSyncId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  // Generate a 5-letter sync ID using uppercase letters and numbers
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let result = ''
+  for (let i = 0; i < 5; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
 }
 
 // Export types for use in components

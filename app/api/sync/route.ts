@@ -11,6 +11,10 @@ interface WorkspaceData {
   boards: Board[]
   workspaceName: string
   lastSync: string
+  settings?: {
+    backgroundColor?: string
+    [key: string]: any
+  }
 }
 
 interface Board {
@@ -24,7 +28,7 @@ interface Board {
 // POST - Save data to cloud
 export async function POST(request: NextRequest) {
   try {
-    const { syncId, boards, workspaceName } = await request.json()
+    const { syncId, boards, workspaceName, settings } = await request.json()
     
     if (!syncId || !boards || !workspaceName) {
       return NextResponse.json(
@@ -36,7 +40,8 @@ export async function POST(request: NextRequest) {
     const data: WorkspaceData = {
       boards,
       workspaceName,
-      lastSync: new Date().toISOString()
+      lastSync: new Date().toISOString(),
+      settings: settings || {}
     }
 
     await redis.set(syncId, data)
@@ -78,6 +83,34 @@ export async function GET(request: NextRequest) {
     console.error('Failed to sync from cloud:', error)
     return NextResponse.json(
       { error: 'Failed to retrieve data from cloud' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Disconnect from sync ID (remove from Redis)
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const syncId = searchParams.get('syncId')
+    
+    if (!syncId) {
+      return NextResponse.json(
+        { error: 'Missing syncId parameter' },
+        { status: 400 }
+      )
+    }
+
+    await redis.del(syncId)
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Sync ID disconnected and data removed from cloud' 
+    })
+  } catch (error) {
+    console.error('Failed to disconnect sync ID:', error)
+    return NextResponse.json(
+      { error: 'Failed to disconnect sync ID' },
       { status: 500 }
     )
   }

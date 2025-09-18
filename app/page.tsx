@@ -290,12 +290,16 @@ export default function KanbanDashboard() {
                 variant="ghost"
                 size="sm"
                 className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
-                disabled={!isCloudSynced}
+                disabled={!isCloudSynced || isSyncing}
                 onClick={handleSyncNow}
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Sync Now</span>
-                <span className="sm:hidden">Sync</span>
+                {isSyncing ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                <span className="hidden sm:inline">{isSyncing ? "Uploading..." : "Upload to Cloud"}</span>
+                <span className="sm:hidden">{isSyncing ? "..." : "Upload"}</span>
               </Button>
               <Button
                 variant="ghost"
