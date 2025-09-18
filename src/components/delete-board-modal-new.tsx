@@ -24,6 +24,7 @@ export function DeleteBoardModal({ open, onOpenChange, boardTitle, onConfirmDele
           cancelText="Cancel"
           confirmText="Delete Board"
           confirmVariant="destructive"
+          confirmClassName="text-white font-medium"
         />
       }
     >

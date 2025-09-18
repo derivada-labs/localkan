@@ -277,7 +277,6 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
         onOpenChange={setShowEditBoardModal}
         board={board}
         onEditBoard={handleEditBoard}
-        onDeleteBoard={() => setShowDeleteBoardModal(true)}
       />
 
       <DeleteBoardModal

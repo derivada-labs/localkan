@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
 
-// Initialize Redis client with environment variables
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-})
+// Lazy initialization to avoid build-time warnings
+const getRedis = () => {
+  return new Redis({
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
+  });
+};
 
 interface WorkspaceData {
   boards: Board[]
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
       settings: settings || {}
     }
 
+    const redis = getRedis();
     await redis.set(syncId, data)
     
     return NextResponse.json({ success: true, message: 'Data synced to cloud successfully' })
@@ -69,6 +72,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const redis = getRedis();
     const data = await redis.get<WorkspaceData>(syncId)
     
     if (!data) {
@@ -101,6 +105,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    const redis = getRedis();
     await redis.del(syncId)
     
     return NextResponse.json({ 

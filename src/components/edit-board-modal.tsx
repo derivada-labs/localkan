@@ -20,7 +20,6 @@ interface EditBoardModalProps {
   onOpenChange: (open: boolean) => void
   board: Board
   onEditBoard: (boardData: { title: string; description: string; color: string; assignees: string }) => void
-  onDeleteBoard: () => void
 }
 
 const colorOptions = [
@@ -35,7 +34,7 @@ const colorOptions = [
   { name: "Gray", value: "gray", class: "bg-gray-500" },
 ]
 
-export function EditBoardModal({ open, onOpenChange, board, onEditBoard, onDeleteBoard }: EditBoardModalProps) {
+export function EditBoardModal({ open, onOpenChange, board, onEditBoard }: EditBoardModalProps) {
   const [boardTitle, setBoardTitle] = useState("")
   const [description, setDescription] = useState("")
   const [defaultAssignees, setDefaultAssignees] = useState("")
@@ -113,18 +112,13 @@ export function EditBoardModal({ open, onOpenChange, board, onEditBoard, onDelet
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <div className="flex gap-2">
-              <Button variant="destructive" onClick={onDeleteBoard}>
-                Delete Board
-              </Button>
-              <Button onClick={handleSubmit} disabled={!boardTitle.trim()}>
-                Update Board
-              </Button>
-            </div>
+            <Button onClick={handleSubmit} disabled={!boardTitle.trim()}>
+              Update Board
+            </Button>
           </div>
         </div>
       </DialogContent>

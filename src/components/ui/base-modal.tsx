@@ -115,6 +115,7 @@ interface StandardFooterProps {
   cancelText?: string
   confirmText?: string
   confirmVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  confirmClassName?: string
   isLoading?: boolean
   disabled?: boolean
 }
@@ -125,6 +126,7 @@ export function StandardFooter({
   cancelText = "Cancel",
   confirmText = "Confirm",
   confirmVariant = "default",
+  confirmClassName,
   isLoading = false,
   disabled = false,
 }: StandardFooterProps) {
@@ -141,6 +143,7 @@ export function StandardFooter({
         variant={confirmVariant}
         onClick={onConfirm}
         disabled={disabled || isLoading}
+        className={confirmClassName}
       >
         {isLoading ? "Loading..." : confirmText}
       </Button>

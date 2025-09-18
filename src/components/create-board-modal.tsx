@@ -24,7 +24,7 @@ import {
 interface CreateBoardModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string; icon?: string }) => void
+  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string[]; icon?: string; dueDate?: string }) => void
 }
 
 const colorOptions = [
@@ -57,32 +57,41 @@ const iconOptions = [
 export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBoardModalProps) {
   const [boardTitle, setBoardTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [defaultAssignees, setDefaultAssignees] = useState("")
+  const [assigneesInput, setAssigneesInput] = useState("")
+  const [dueDate, setDueDate] = useState("")
   const [selectedColor, setSelectedColor] = useState("purple")
   const [selectedIcon, setSelectedIcon] = useState("LayoutGrid")
 
   const handleSubmit = () => {
     if (!boardTitle.trim()) return
 
+    // Parse assignees from comma-separated input
+    const assigneesArray = assigneesInput
+      .split(',')
+      .map(name => name.trim())
+      .filter(name => name.length > 0)
+
     onCreateBoard({
       title: boardTitle,
       description,
       color: selectedColor,
-      assignees: defaultAssignees,
+      assignees: assigneesArray,
       icon: selectedIcon,
+      dueDate: dueDate || undefined,
     })
 
     // Reset form
     setBoardTitle("")
     setDescription("")
-    setDefaultAssignees("")
+    setAssigneesInput("")
+    setDueDate("")
     setSelectedColor("purple")
     setSelectedIcon("LayoutGrid")
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Create New Board</DialogTitle>
         </DialogHeader>
@@ -113,16 +122,50 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assignees">Default Assignees</Label>
+            <Label htmlFor="assignees">Assignees</Label>
             <Input
               id="assignees"
-              placeholder="Comma-separated names (e.g., Alice, Bob)"
-              value={defaultAssignees}
-              onChange={(e) => setDefaultAssignees(e.target.value)}
+              placeholder="Comma-separated names (e.g., Alice, Bob, Charlie)"
+              value={assigneesInput}
+              onChange={(e) => setAssigneesInput(e.target.value)}
             />
             <p className="text-xs text-gray-500">
-              Used to pre-fill assignees when creating new cards.
+              Add multiple assignees separated by commas.
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="due-date">Due Date (Optional)</Label>
+            <Input
+              id="due-date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Board Icon</Label>
+            <div className="grid grid-cols-4 gap-3">
+              {iconOptions.map((icon) => {
+                const IconComponent = icon.component
+                return (
+                  <button
+                    key={icon.value}
+                    onClick={() => setSelectedIcon(icon.value)}
+                    className={`w-full h-12 rounded-lg border-2 flex items-center justify-center transition-all ${
+                      selectedIcon === icon.value 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <IconComponent className={`w-5 h-5 ${
+                      selectedIcon === icon.value ? 'text-blue-600' : 'text-gray-600'
+                    }`} />
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
 
