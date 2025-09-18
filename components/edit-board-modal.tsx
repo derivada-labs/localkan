@@ -104,7 +104,7 @@ export function EditBoardModal({ open, onOpenChange, board, onEditBoard, onDelet
                 <button
                   key={color.value}
                   onClick={() => setSelectedColor(color.value)}
-                  className={`w-full h-12 rounded-lg ${color.class} relative flex items-center justify-center transition-all hover:scale-105`}
+                  className={`w-full h-12 rounded-lg ${color.class} relative flex items-center justify-center`}
                 >
                   {selectedColor === color.value && <span className="text-white text-lg">✓</span>}
                 </button>

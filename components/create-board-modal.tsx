@@ -6,11 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { 
+  LayoutGrid, 
+  Target, 
+  Calendar, 
+  Users, 
+  Briefcase, 
+  BookOpen, 
+  Zap, 
+  Heart, 
+  Star, 
+  Rocket, 
+  Trophy, 
+  Lightbulb 
+} from "lucide-react"
 
 interface CreateBoardModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string }) => void
+  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string; icon?: string }) => void
 }
 
 const colorOptions = [
@@ -25,11 +39,27 @@ const colorOptions = [
   { name: "Gray", value: "gray", class: "bg-gray-500" },
 ]
 
+const iconOptions = [
+  { name: "Grid", value: "LayoutGrid", component: LayoutGrid },
+  { name: "Target", value: "Target", component: Target },
+  { name: "Calendar", value: "Calendar", component: Calendar },
+  { name: "Users", value: "Users", component: Users },
+  { name: "Briefcase", value: "Briefcase", component: Briefcase },
+  { name: "Book", value: "BookOpen", component: BookOpen },
+  { name: "Lightning", value: "Zap", component: Zap },
+  { name: "Heart", value: "Heart", component: Heart },
+  { name: "Star", value: "Star", component: Star },
+  { name: "Rocket", value: "Rocket", component: Rocket },
+  { name: "Trophy", value: "Trophy", component: Trophy },
+  { name: "Lightbulb", value: "Lightbulb", component: Lightbulb },
+]
+
 export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBoardModalProps) {
   const [boardTitle, setBoardTitle] = useState("")
   const [description, setDescription] = useState("")
   const [defaultAssignees, setDefaultAssignees] = useState("")
   const [selectedColor, setSelectedColor] = useState("purple")
+  const [selectedIcon, setSelectedIcon] = useState("LayoutGrid")
 
   const handleSubmit = () => {
     if (!boardTitle.trim()) return
@@ -39,6 +69,7 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
       description,
       color: selectedColor,
       assignees: defaultAssignees,
+      icon: selectedIcon,
     })
 
     // Reset form
@@ -46,30 +77,30 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
     setDescription("")
     setDefaultAssignees("")
     setSelectedColor("purple")
+    setSelectedIcon("LayoutGrid")
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md animate-in fade-in-0 zoom-in-95 duration-300">
-        <DialogHeader className="animate-in slide-in-from-top-2 duration-500">
-          <DialogTitle className="transition-colors duration-200 hover:text-blue-600">Create New Board</DialogTitle>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Board</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2 animate-in slide-in-from-left duration-500 delay-100">
+          <div className="space-y-2">
             <Label htmlFor="board-title">
-              Board Title <span className="text-red-500 animate-pulse">*</span>
+              Board Title <span className="text-red-500">*</span>
             </Label>
             <Input
               id="board-title"
               placeholder="Enter board title..."
               value={boardTitle}
               onChange={(e) => setBoardTitle(e.target.value)}
-              className="transition-all duration-200 focus:scale-[1.02] focus:shadow-md"
             />
           </div>
 
-          <div className="space-y-2 animate-in slide-in-from-right duration-500 delay-150">
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -77,57 +108,55 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="transition-all duration-200 focus:scale-[1.01] focus:shadow-md resize-none"
+              className="resize-none"
             />
           </div>
 
-          <div className="space-y-2 animate-in slide-in-from-left duration-500 delay-200">
+          <div className="space-y-2">
             <Label htmlFor="assignees">Default Assignees</Label>
             <Input
               id="assignees"
               placeholder="Comma-separated names (e.g., Alice, Bob)"
               value={defaultAssignees}
               onChange={(e) => setDefaultAssignees(e.target.value)}
-              className="transition-all duration-200 focus:scale-[1.02] focus:shadow-md"
             />
-            <p className="text-xs text-gray-500 transition-colors duration-200 hover:text-gray-700">
+            <p className="text-xs text-gray-500">
               Used to pre-fill assignees when creating new cards.
             </p>
           </div>
 
-          <div className="space-y-3 animate-in slide-in-from-bottom duration-500 delay-250">
+
+
+          <div className="space-y-3">
             <Label>Background Color</Label>
             <div className="grid grid-cols-3 gap-3">
-              {colorOptions.map((color, index) => (
+              {colorOptions.map((color) => (
                 <button
                   key={color.value}
                   onClick={() => setSelectedColor(color.value)}
-                  className={`w-full h-12 rounded-lg ${color.class} relative flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-${color.value}-500/25 animate-in zoom-in group`}
-                  style={{ animationDelay: `${300 + index * 50}ms` }}
+                  className={`w-full h-12 rounded-lg ${color.class} relative flex items-center justify-center`}
                 >
                   {selectedColor === color.value && (
-                    <span className="text-white text-lg animate-in zoom-in duration-200 transition-transform group-hover:scale-125">
+                    <span className="text-white text-lg">
                       ✓
                     </span>
                   )}
-                  <div className="absolute inset-0 rounded-lg ring-2 ring-transparent group-hover:ring-white/30 transition-all duration-200"></div>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 animate-in fade-in duration-500 delay-400">
+          <div className="flex justify-end gap-3 pt-4">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="transition-all duration-300 hover:scale-105 hover:shadow-md"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={!boardTitle.trim()}
-              className="disabled:opacity-50 transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:hover:scale-100"
+              className="disabled:opacity-50"
             >
               Create Board
             </Button>

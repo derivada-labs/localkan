@@ -5,12 +5,55 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { SyncIdModal } from "@/components/sync-id-modal"
 import { WorkspaceSettingsModal } from "@/components/workspace-settings-modal"
 import { CreateBoardModal } from "@/components/create-board-modal"
 import { EditBoardModal } from "@/components/edit-board-modal"
 import { DeleteBoardModal } from "@/components/delete-board-modal"
-import { LayoutGrid, Cloud, Filter, Settings, Edit, Trash2, Plus } from "lucide-react"
+import { 
+  LayoutGrid, 
+  Cloud, 
+  RefreshCw, 
+  Filter, 
+  Settings, 
+  Edit, 
+  Trash2, 
+  Plus, 
+  Search, 
+  X,
+  Target,
+  Calendar,
+  Users,
+  Briefcase,
+  BookOpen,
+  Zap,
+  Heart,
+  Star,
+  Rocket,
+  Trophy,
+  Lightbulb,
+  Upload
+} from "lucide-react"
+
+const getIconComponent = (iconName: string) => {
+  const iconMap: { [key: string]: any } = {
+    LayoutGrid,
+    Target,
+    Calendar,
+    Users,
+    Briefcase,
+    BookOpen,
+    Zap,
+    Heart,
+    Star,
+    Rocket,
+    Trophy,
+    Lightbulb,
+  }
+  return iconMap[iconName] || LayoutGrid
+}
 
 export default function KanbanDashboard() {
   const router = useRouter()
@@ -21,23 +64,70 @@ export default function KanbanDashboard() {
   const [showDeleteBoardModal, setShowDeleteBoardModal] = useState(false)
   const [selectedBoard, setSelectedBoard] = useState<any>(null)
   const [boards, setBoards] = useState<
-    Array<{ id: string; title: string; color: string; description?: string; assignees?: string }>
+    Array<{ id: string; title: string; color: string; description?: string; assignees?: string; icon?: string; createdAt?: string }>
   >([])
   const [mounted, setMounted] = useState(false)
+  const [backgroundGradient, setBackgroundGradient] = useState("from-purple-600 via-purple-700 to-indigo-800")
+  const [currentBackgroundColor, setCurrentBackgroundColor] = useState("purple")
+  const [workspaceName, setWorkspaceName] = useState("My Workspace")
+  const [isCloudSynced, setIsCloudSynced] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [filterAssignee, setFilterAssignee] = useState("")
+  const [filterPriority, setFilterPriority] = useState("")
 
   useEffect(() => {
     const savedBoards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
+    const savedWorkspaceName = localStorage.getItem("workspace-name") || "My Workspace"
+    const savedBackground = localStorage.getItem("workspace-background") || "purple"
+    const syncId = localStorage.getItem("sync-id")
+    
     setBoards(savedBoards)
+    setWorkspaceName(savedWorkspaceName)
+    setIsCloudSynced(!!syncId)
+    setCurrentBackgroundColor(savedBackground)
+    
+    // Set background gradient based on saved color
+    const colorOptions = {
+      purple: "from-purple-600 via-purple-700 to-indigo-800",
+      blue: "from-blue-600 via-blue-700 to-cyan-800",
+      green: "from-green-600 via-green-700 to-emerald-800",
+      orange: "from-orange-600 via-orange-700 to-red-800",
+      red: "from-red-600 via-red-700 to-pink-800",
+      pink: "from-pink-600 via-pink-700 to-rose-800",
+      teal: "from-teal-600 via-teal-700 to-cyan-800",
+      indigo: "from-indigo-600 via-indigo-700 to-purple-800",
+      gray: "from-gray-600 via-gray-700 to-slate-800",
+    }
+    setBackgroundGradient(colorOptions[savedBackground as keyof typeof colorOptions] || colorOptions.purple)
+    
     setTimeout(() => setMounted(true), 100)
   }, [])
 
-  const handleCreateBoard = (boardData: { title: string; description: string; color: string; assignees: string }) => {
+  const handleBackgroundChange = (color: string) => {
+    const colorOptions = {
+      purple: "from-purple-600 via-purple-700 to-indigo-800",
+      blue: "from-blue-600 via-blue-700 to-cyan-800",
+      green: "from-green-600 via-green-700 to-emerald-800",
+      orange: "from-orange-600 via-orange-700 to-red-800",
+      red: "from-red-600 via-red-700 to-pink-800",
+      pink: "from-pink-600 via-pink-700 to-rose-800",
+      teal: "from-teal-600 via-teal-700 to-cyan-800",
+      indigo: "from-indigo-600 via-indigo-700 to-purple-800",
+      gray: "from-gray-600 via-gray-700 to-slate-800",
+    }
+    setBackgroundGradient(colorOptions[color as keyof typeof colorOptions] || colorOptions.purple)
+    setCurrentBackgroundColor(color)
+  }
+
+  const handleCreateBoard = (boardData: { title: string; description: string; color: string; assignees: string; icon?: string }) => {
     const newBoard = {
       id: Date.now().toString(),
       title: boardData.title,
       color: boardData.color,
       description: boardData.description,
       assignees: boardData.assignees,
+      icon: boardData.icon || "LayoutGrid",
+      createdAt: new Date().toISOString(),
     }
     const updatedBoards = [...boards, newBoard]
     setBoards(updatedBoards)
@@ -75,8 +165,58 @@ export default function KanbanDashboard() {
     setShowDeleteBoardModal(true)
   }
 
+  // Filter boards based on assignee and priority
+  const filteredBoards = boards.filter(board => {
+    const matchesAssignee = !filterAssignee || 
+      (board.assignees && board.assignees.toLowerCase().includes(filterAssignee.toLowerCase()))
+    const matchesPriority = !filterPriority || 
+      (board.description && board.description.toLowerCase().includes(filterPriority.toLowerCase()))
+    return matchesAssignee && matchesPriority
+  })
+
+  const clearFilters = () => {
+    setFilterAssignee("")
+    setFilterPriority("")
+    setShowFilters(false)
+  }
+
+  const handleSyncSetup = (syncId: string) => {
+    setIsCloudSynced(true)
+    // Refresh the page to show updated sync status
+    window.location.reload()
+  }
+
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  const handleSyncNow = async () => {
+    const syncId = localStorage.getItem("sync-id")
+    if (!syncId) {
+      alert("No Sync ID found. Please set up sync first.")
+      return
+    }
+
+    try {
+      setIsSyncing(true)
+      const { syncToCloud } = await import("@/lib/sync-client")
+      const boards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
+      const workspaceName = localStorage.getItem("workspace-name") || "My Workspace"
+      
+      await syncToCloud(syncId, boards, workspaceName)
+      
+      // Update last sync time
+      localStorage.setItem("last-sync", new Date().toISOString())
+      
+      alert(`✅ Upload successful! ${boards.length} boards saved to cloud.`)
+    } catch (error) {
+      console.error("Sync error:", error)
+      alert("❌ Upload failed. Please check your connection and try again.")
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 overflow-hidden">
+    <div className={`min-h-screen bg-gradient-to-br ${backgroundGradient} overflow-hidden`}>
       <header
         className={`flex items-center justify-center p-4 sm:p-6 transition-all duration-1000 ease-out ${
           mounted ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
@@ -97,8 +237,10 @@ export default function KanbanDashboard() {
               onClick={() => setShowWorkspaceModal(true)}
             >
               <Settings className="w-4 h-4 mr-2" />
-              <span className="hidden md:inline">My workspace</span>
-              <span className="ml-2 text-xs text-white/70 hidden lg:inline">Local Storage</span>
+              <span className="hidden md:inline">{workspaceName}</span>
+              <span className="ml-2 text-xs text-white/70 hidden lg:inline">
+                {isCloudSynced ? "Cloud Storage" : "Local Storage"}
+              </span>
             </Button>
             <Button
               variant="ghost"
@@ -126,6 +268,11 @@ export default function KanbanDashboard() {
             <div className="flex items-center gap-2">
               <LayoutGrid className="w-5 h-5 text-white/70" />
               <h2 className="text-lg font-medium text-white/90">Your boards</h2>
+              {(filterAssignee || filterPriority) && (
+                <span className="text-xs text-white/60 bg-white/20 px-2 py-1 rounded-full">
+                  {filteredBoards.length} of {boards.length}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -143,8 +290,10 @@ export default function KanbanDashboard() {
                 variant="ghost"
                 size="sm"
                 className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
+                disabled={!isCloudSynced}
+                onClick={handleSyncNow}
               >
-                <Cloud className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Sync Now</span>
                 <span className="sm:hidden">Sync</span>
               </Button>
@@ -152,6 +301,7 @@ export default function KanbanDashboard() {
                 variant="ghost"
                 size="sm"
                 className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
+                onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Filter</span>
@@ -160,9 +310,54 @@ export default function KanbanDashboard() {
             </div>
           </div>
 
-          {boards.length > 0 ? (
+          {/* Filter Section */}
+          {showFilters && (
+            <div
+              className={`mb-6 p-4 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 transition-all duration-500 ease-out ${
+                mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                <div className="flex-1 space-y-2">
+                  <Label className="text-white/90 text-sm">Filter by Assignee</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Input
+                      placeholder="Search assignee..."
+                      value={filterAssignee}
+                      onChange={(e) => setFilterAssignee(e.target.value)}
+                      className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="text-white/90 text-sm">Filter by Priority/Description</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Input
+                      placeholder="Search description..."
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value)}
+                      className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {filteredBoards.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {boards.map((board, index) => (
+              {filteredBoards.map((board, index) => (
                 <div
                   key={board.id}
                   onClick={() => router.push(`/board/${board.id}`)}
@@ -208,6 +403,11 @@ export default function KanbanDashboard() {
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                         <span className="text-xs text-white/60">Active</span>
                       </div>
+                      {board.createdAt && (
+                        <div className="text-xs text-white/50">
+                          Created {new Date(board.createdAt).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Action Buttons - Bottom Right */}
@@ -240,8 +440,8 @@ export default function KanbanDashboard() {
                   mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
                 }`}
                 style={{
-                  transitionDelay: `${400 + boards.length * 150}ms`,
-                  animationDelay: `${400 + boards.length * 150}ms`,
+                  transitionDelay: `${400 + filteredBoards.length * 150}ms`,
+                  animationDelay: `${400 + filteredBoards.length * 150}ms`,
                 }}
               >
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
@@ -302,8 +502,17 @@ export default function KanbanDashboard() {
       </main>
 
       {/* Modals */}
-      <SyncIdModal open={showSyncModal} onOpenChange={setShowSyncModal} />
-      <WorkspaceSettingsModal open={showWorkspaceModal} onOpenChange={setShowWorkspaceModal} />
+      <SyncIdModal 
+        open={showSyncModal} 
+        onOpenChange={setShowSyncModal}
+        onSyncSetup={handleSyncSetup}
+      />
+      <WorkspaceSettingsModal 
+        open={showWorkspaceModal} 
+        onOpenChange={setShowWorkspaceModal}
+        onBackgroundChange={handleBackgroundChange}
+        currentBackground={currentBackgroundColor}
+      />
       <CreateBoardModal
         open={showCreateBoardModal}
         onOpenChange={setShowCreateBoardModal}

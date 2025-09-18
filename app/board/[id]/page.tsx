@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Plus } from "lucide-react"
@@ -36,8 +36,9 @@ const columns = [
   { id: "done", title: "Done", color: "bg-gray-100" },
 ]
 
-export default function BoardPage({ params }: { params: { id: string } }) {
+export default function BoardPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const resolvedParams = use(params)
   const [board, setBoard] = useState<Board | null>(null)
   const [cards, setCards] = useState<Card[]>([])
   const [showEditBoardModal, setShowEditBoardModal] = useState(false)
@@ -52,17 +53,17 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     // Load board data from localStorage
     const boards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
-    const currentBoard = boards.find((b: Board) => b.id === params.id)
+    const currentBoard = boards.find((b: Board) => b.id === resolvedParams.id)
     if (currentBoard) {
       setBoard(currentBoard)
     }
 
     // Load cards data from localStorage
-    const savedCards = JSON.parse(localStorage.getItem(`kanban-cards-${params.id}`) || "[]")
+    const savedCards = JSON.parse(localStorage.getItem(`kanban-cards-${resolvedParams.id}`) || "[]")
     setCards(savedCards)
 
     setTimeout(() => setMounted(true), 100)
-  }, [params.id])
+  }, [resolvedParams.id])
 
   const handleCreateCard = (cardData: {
     title: string
@@ -81,7 +82,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     }
     const updatedCards = [...cards, newCard]
     setCards(updatedCards)
-    localStorage.setItem(`kanban-cards-${params.id}`, JSON.stringify(updatedCards))
+    localStorage.setItem(`kanban-cards-${resolvedParams.id}`, JSON.stringify(updatedCards))
     setShowCreateCardModal(false)
   }
 
@@ -94,7 +95,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     if (!selectedCard) return
     const updatedCards = cards.map((card) => (card.id === selectedCard.id ? { ...card, ...cardData } : card))
     setCards(updatedCards)
-    localStorage.setItem(`kanban-cards-${params.id}`, JSON.stringify(updatedCards))
+    localStorage.setItem(`kanban-cards-${resolvedParams.id}`, JSON.stringify(updatedCards))
     setShowEditCardModal(false)
     setSelectedCard(null)
   }
@@ -103,7 +104,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     if (!selectedCard) return
     const updatedCards = cards.filter((card) => card.id !== selectedCard.id)
     setCards(updatedCards)
-    localStorage.setItem(`kanban-cards-${params.id}`, JSON.stringify(updatedCards))
+    localStorage.setItem(`kanban-cards-${resolvedParams.id}`, JSON.stringify(updatedCards))
     setShowDeleteCardModal(false)
     setSelectedCard(null)
   }
@@ -123,11 +124,11 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   const handleDeleteBoard = () => {
     // Remove board from localStorage
     const boards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
-    const updatedBoards = boards.filter((b: Board) => b.id !== params.id)
+    const updatedBoards = boards.filter((b: Board) => b.id !== resolvedParams.id)
     localStorage.setItem("kanban-boards", JSON.stringify(updatedBoards))
 
     // Remove cards from localStorage
-    localStorage.removeItem(`kanban-cards-${params.id}`)
+    localStorage.removeItem(`kanban-cards-${resolvedParams.id}`)
 
     setShowDeleteBoardModal(false)
     router.push("/")
