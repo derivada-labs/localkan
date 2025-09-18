@@ -147,7 +147,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
       <header
-        className={`flex items-center justify-between p-4 border-b border-white/10 transition-all duration-800 ease-out ${
+        className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-white/10 transition-all duration-800 ease-out gap-4 ${
           mounted ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
         }`}
       >
@@ -156,60 +156,64 @@ export default function BoardPage({ params }: { params: { id: string } }) {
             variant="ghost"
             size="sm"
             onClick={() => router.push("/")}
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-white/10"
+            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-white/10 backdrop-blur-md"
           >
             <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-300 hover:-translate-x-1" />
-            Boards
+            <span className="hidden sm:inline">Boards</span>
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2 transition-all duration-300 hover:scale-105">
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-center">
+          <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2 transition-all duration-300 hover:scale-105">
             {board.title}
             <span className="text-lg transition-transform duration-300 hover:scale-125">📋</span>
             <span className="text-lg transition-transform duration-300 hover:rotate-12">🔧</span>
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
           >
-            Setup
+            <span className="hidden sm:inline">Setup</span>
+            <span className="sm:hidden">Setup</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
           >
-            Sync
+            <span className="hidden sm:inline">Sync</span>
+            <span className="sm:hidden">Sync</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
           >
-            Filter
+            <span className="hidden sm:inline">Filter</span>
+            <span className="sm:hidden">Filter</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowEditBoardModal(true)}
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
           >
-            Settings
+            <span className="hidden sm:inline">Settings</span>
+            <span className="sm:hidden">Settings</span>
           </Button>
         </div>
       </header>
 
       <div
-        className={`p-6 transition-all duration-1000 ease-out delay-200 ${
+        className={`p-4 sm:p-6 transition-all duration-1000 ease-out delay-200 ${
           mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
         }`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {columns.map((column, columnIndex) => (
             <div
               key={column.id}
@@ -236,7 +240,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                 </Button>
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 {cards
                   .filter((card) => card.status === column.id)
                   .map((card, cardIndex) => (
