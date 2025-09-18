@@ -13,11 +13,11 @@ export interface WorkspaceData {
   lastSync: string
   settings?: {
     backgroundColor?: string
-    [key: string]: any
+    [key: string]: string | number | boolean | undefined
   }
 }
 
-export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string, settings?: any): Promise<void> => {
+export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string, settings?: { backgroundColor?: string; [key: string]: string | number | boolean | undefined }): Promise<void> => {
   const response = await fetch('/api/sync', {
     method: 'POST',
     headers: {

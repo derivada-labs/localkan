@@ -13,7 +13,7 @@ interface WorkspaceData {
   lastSync: string
   settings?: {
     backgroundColor?: string
-    [key: string]: any
+    [key: string]: string | number | boolean | undefined
   }
 }
 

@@ -19,7 +19,8 @@ export const PUT = async () => {
     await redis.set("item", { message: "Hello from Upstash Redis!", timestamp: new Date().toISOString() });
     
     return new NextResponse(JSON.stringify({ success: true, message: "Test data set successfully" }), { status: 200 });
-  } catch (error) {
+  } catch (err) {
+    console.error("Redis error:", err);
     return new NextResponse(JSON.stringify({ error: "Failed to set test data" }), { status: 500 });
   }
 };

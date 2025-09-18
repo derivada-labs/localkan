@@ -7,7 +7,7 @@ interface WorkspaceData {
   lastSync: string
   settings?: {
     backgroundColor?: string
-    [key: string]: any
+    [key: string]: string | number | boolean | undefined
   }
 }
 
@@ -61,7 +61,7 @@ class RedisClient {
 
 export const redisClient = new RedisClient()
 
-export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string, settings?: any): Promise<void> => {
+export const syncToCloud = async (syncId: string, boards: Board[], workspaceName: string, settings?: { backgroundColor?: string; [key: string]: string | number | boolean | undefined }): Promise<void> => {
   try {
     const data: WorkspaceData = {
       boards,
