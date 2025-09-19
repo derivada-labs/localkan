@@ -1,13 +1,8 @@
 {
-  "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 10,
-      "runtime": "nodejs22.x"
-    }
-  },
   "rewrites": [
-    { "source": "/public", "destination": "/public/boards/boards.html" }
+    { "source": "/", "destination": "/boards/boards.html" },
+    { "source": "/boards", "destination": "/boards/boards.html" },
+    { "source": "/board", "destination": "/board/board.html" }
   ],
   "headers": [
     {

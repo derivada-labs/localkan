@@ -1,13 +1,11 @@
 {
   "name": "localkan",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "Multi-User Kanban Todo App with Cloud Sync - Beautiful, responsive, and collaborative project management",
   "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "vercel": "npx vercel@latest",
-    "vercel-dev": "npx vercel@latest dev",
     "deploy": "npx vercel@latest --prod"
   },
   "dependencies": {
@@ -23,6 +21,6 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": "22.x"
+    "node": "20"
   }
 }
