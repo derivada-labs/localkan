@@ -7,7 +7,7 @@
     }
   },
   "rewrites": [
-    { "source": "/", "destination": "/public/boards/boards.html" }
+    { "source": "/public", "destination": "/public/boards/boards.html" }
   ],
   "headers": [
     {
