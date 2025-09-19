@@ -11,11 +11,7 @@ LocalKan is a multi-user Kanban board application built with vanilla JavaScript,
 ### Local Development
 ```bash
 # Start local Express server (port 3001)
-npm run start
-npm run dev
-
-# Serve static files only (port 8080)
-npm run serve
+npm start
 ```
 
 ### Vercel Development & Deployment
@@ -29,12 +25,12 @@ npm run deploy
 
 ### Testing
 ```bash
-# Run KV storage tests
-npm run test:kv
+# Run KV storage tests (server-side)
+node test/test-kv.js
 
 # Open browser-based tests
-npm run test          # Opens test/test-sync.html
-npm run test:multiuser # Opens test/test-multiuser.html
+open test/test-sync.html     # Basic sync testing
+open test/test-multiuser.html # Multi-user testing
 ```
 
 ## Architecture
@@ -137,7 +133,7 @@ KV_REST_API_TOKEN=   # Upstash Redis token
 ### Testing Sync Functionality
 - Use `test/test-sync.html` for basic sync testing
 - Use `test/test-multiuser.html` for multi-user scenarios
-- Run `npm run test:kv` for server-side KV storage tests
+- Run `node test/test-kv.js` for server-side KV storage tests
 
 ### Deployment Flow
 - Local: `npm start` → Express server
