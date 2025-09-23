@@ -280,129 +280,93 @@ export default function KanbanDashboard() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${backgroundGradient} overflow-hidden`}>
-      <header
-        className={`flex items-center justify-center p-4 sm:p-6 lg:p-8 transition-all duration-1000 ease-out ${
-          mounted ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
-        }`}
-      >
-        <div className="w-full max-w-7xl xl:max-w-8xl flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="w-full max-w-7xl xl:max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white/90">
-              Kanban Boards
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              {workspaceName}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg hidden sm:flex"
+              className="text-gray-600 hover:text-gray-900 border-gray-300 hover:bg-gray-50"
+              onClick={() => setShowSyncModal(true)}
+            >
+              <Cloud className="w-4 h-4 mr-2" />
+              {isCloudSynced ? "Sync" : "Setup Sync"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 border-gray-300 hover:bg-gray-50"
               onClick={() => setShowWorkspaceModal(true)}
             >
               <Settings className="w-4 h-4 mr-2" />
-              <span className="hidden md:inline">{workspaceName}</span>
-              <span className="ml-2 text-xs text-white/70 hidden lg:inline">
-                {isCloudSynced ? "Cloud Storage" : "Local Storage"}
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg sm:hidden"
-              onClick={() => setShowWorkspaceModal(true)}
-            >
-              <Settings className="w-4 h-4" />
+              Settings
             </Button>
           </div>
         </div>
       </header>
 
-      <main
-        className={`px-4 sm:px-6 lg:px-8 transition-all duration-1000 ease-out delay-200 ${
-          mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-        }`}
-      >
+      <main className="px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl xl:max-w-8xl mx-auto">
-          <div
-            className={`flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 lg:mb-8 gap-4 transition-all duration-800 ease-out delay-300 ${
-              mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <LayoutGrid className="w-5 h-5 text-white/70" />
-              <h2 className="text-lg lg:text-xl font-medium text-white/90">Your boards</h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium text-gray-900">Your boards</h2>
               {(filterAssignee || filterPriority) && (
-                <span className="text-xs text-white/60 bg-white/20 px-2 py-1 rounded-full">
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
                   {filteredBoards.length} of {boards.length}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
-                onClick={() => setShowSyncModal(true)}
-              >
-                <Cloud className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Setup Sync</span>
-                <span className="sm:hidden">Setup</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
-                disabled={!isCloudSynced || isSyncing}
-                onClick={handleSyncNow}
-              >
-                {isSyncing ? (
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Cloud className="w-4 h-4 mr-2" />
-                )}
-                <span className="hidden sm:inline">{isSyncing ? "Syncing..." : "Sync"}</span>
-                <span className="sm:hidden">{isSyncing ? "..." : "Sync"}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:text-white bg-white/30 hover:bg-white/40 border border-white/40 hover:border-white/50 backdrop-blur-lg shadow-lg"
+                className="text-gray-600 hover:text-gray-900 border-gray-300 hover:bg-gray-50"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Filter</span>
-                <span className="sm:hidden">Filter</span>
+                Filter
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowCreateBoardModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Board
               </Button>
             </div>
           </div>
 
           {/* Filter Section */}
           {showFilters && (
-            <div
-              className={`mb-6 lg:mb-8 p-4 lg:p-6 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 transition-all duration-500 ease-out ${
-                mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-              }`}
-            >
+            <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                 <div className="flex-1 space-y-2">
-                  <Label className="text-white/90 text-sm">Filter by Assignee</Label>
+                  <Label className="text-gray-700 text-sm font-medium">Filter by Assignee</Label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search assignee..."
                       value={filterAssignee}
                       onChange={(e) => setFilterAssignee(e.target.value)}
-                      className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                      className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={clearFilters}
-                  className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30"
+                  className="text-gray-600 hover:text-gray-900 border-gray-300 hover:bg-gray-50"
                 >
                   <X className="w-4 h-4 mr-2" />
                   Clear
@@ -412,198 +376,141 @@ export default function KanbanDashboard() {
           )}
 
           {filteredBoards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredBoards.map((board, index) => {
                 const IconComponent = getIconComponent(board.icon || "LayoutGrid")
                 return (
                   <div
                     key={board.id}
                     onClick={() => router.push(`/board/${board.id}`)}
-                    className={`relative bg-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-6 sm:p-8 hover:bg-white/10 hover:border-white/30 hover:scale-[1.02] cursor-pointer group aspect-[4/3] flex flex-col transition-all duration-300 shadow-xl hover:shadow-2xl ${
-                      mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-                    }`}
+                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-gray-300 relative"
                     style={{
-                      transitionDelay: `${400 + index * 100}ms`,
-                      animationDelay: `${400 + index * 100}ms`,
+                      background: `linear-gradient(135deg, ${board.color}20 0%, ${board.color}10 100%)`,
                     }}
                   >
-                    {/* Priority Indicator */}
-                    {board.priority && (
-                      <div className={`absolute top-4 right-4 w-3 h-3 rounded-full ${getPriorityColor(board.priority)} shadow-lg`} />
-                    )}
+                    <div className="p-4">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm"
+                            style={{ backgroundColor: board.color }}
+                          >
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                        </div>
 
-                    {/* Header Section */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div
-                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-${board.color}-400 to-${board.color}-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300`}
-                      >
-                        <IconComponent className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => handleEditClick(e, board)}
+                            className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => handleDeleteClick(e, board)}
+                            className="h-7 w-7 p-0 hover:bg-red-50 text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                      
-                      {/* Action Buttons - Top Right */}
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => handleEditClick(e, board)}
-                          className="h-8 w-8 p-0 bg-white/20 hover:bg-white/40 text-white hover:text-white rounded-lg backdrop-blur-sm shadow-md hover:shadow-lg"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => handleDeleteClick(e, board)}
-                          className="h-8 w-8 p-0 bg-white/20 hover:bg-red-500/70 text-white hover:text-white rounded-lg backdrop-blur-sm shadow-md hover:shadow-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+
+                      {/* Content */}
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 leading-tight">
+                          {board.title}
+                        </h3>
+                        {board.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                            {board.description}
+                          </p>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 flex flex-col justify-center">
-                      <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 drop-shadow-lg line-clamp-2 leading-tight">
-                        {board.title}
-                      </h3>
-                      {board.description && (
-                        <p className="text-white/80 text-sm sm:text-base font-medium line-clamp-2 drop-shadow-md leading-relaxed">
-                          {board.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Footer Section */}
-                    <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
-                      {/* Assignees Row */}
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {board.assignees && board.assignees.length > 0 ? (
-                          <>
-                            <div className="flex -space-x-2">
+                      {/* Footer */}
+                      <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                        {/* Assignees */}
+                        {board.assignees && board.assignees.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex -space-x-1">
                               {board.assignees.slice(0, 3).map((assignee, idx) => (
-                                <div 
+                                <div
                                   key={idx}
-                                  className="w-7 h-7 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border-2 border-white/20"
+                                  className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white"
                                   title={assignee}
                                 >
                                   {assignee.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
                                 </div>
                               ))}
                               {board.assignees.length > 3 && (
-                                <div className="w-7 h-7 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border-2 border-white/20">
+                                <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white">
                                   +{board.assignees.length - 3}
                                 </div>
                               )}
                             </div>
-                            <span className="text-xs sm:text-sm text-white/90 font-medium drop-shadow-md truncate">
-                              {board.assignees.length === 1 ? board.assignees[0] : `${board.assignees.length} assignees`}
+                            <span className="text-xs text-gray-600 font-medium">
+                              {board.assignees.length === 1 ? board.assignees[0] : `${board.assignees.length} members`}
                             </span>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-2 text-white/60">
-                            <Users className="w-4 h-4" />
-                            <span className="text-xs">Unassigned</span>
                           </div>
                         )}
-                      </div>
-                      
-                      {/* Dates Row */}
-                      <div className="flex items-center justify-between text-xs">
-                        {/* Created Date */}
-                        {board.createdAt && (
-                          <div className="flex items-center gap-1 text-white/70 font-medium drop-shadow-md">
-                            <Calendar className="w-3 h-3" />
+
+                        {/* Dates */}
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          {board.createdAt && (
                             <span>Created {formatUSDate(board.createdAt)}</span>
-                          </div>
-                        )}
-                        
-                        {/* Due Date */}
-                         {board.dueDate && (
-                           <div className={`flex items-center gap-1 font-medium drop-shadow-md ${
-                             isDueDateOverdue(board.dueDate) 
-                               ? 'text-red-300' 
-                               : 'text-white/80'
-                           }`}>
-                             <Target className="w-3 h-3" />
-                             <span className="text-xs">
-                               {isDueDateOverdue(board.dueDate) ? '⚠️ ' : ''}
-                               {formatRelativeDate(board.dueDate)}
-                             </span>
-                           </div>
-                         )}
+                          )}
+                          {board.dueDate && (
+                            <span className={isDueDateOverdue(board.dueDate) ? 'text-red-500 font-medium' : ''}>
+                              {isDueDateOverdue(board.dueDate) ? '⚠️ ' : ''}
+                              Due {formatRelativeDate(board.dueDate)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl pointer-events-none" />
                   </div>
                 )
               })}
-              
+
               {/* Create New Board Card */}
               <div
                 onClick={() => setShowCreateBoardModal(true)}
-                className={`relative bg-white/5 backdrop-blur-sm border-2 border-dashed border-white/30 rounded-3xl p-6 sm:p-8 hover:bg-white/10 hover:border-white/50 hover:scale-[1.02] cursor-pointer group aspect-[4/3] flex flex-col transition-all duration-300 shadow-xl hover:shadow-2xl ${
-                  mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-                }`}
-                style={{
-                  transitionDelay: `${400 + filteredBoards.length * 100}ms`,
-                  animationDelay: `${400 + filteredBoards.length * 100}ms`,
-                }}
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group border-2 border-dashed border-gray-300 hover:border-gray-400 relative"
               >
-                {/* Header Section */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-white/20 to-white/10 group-hover:from-white/30 group-hover:to-white/20 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <Plus className="w-8 h-8 sm:w-9 sm:h-9 text-white/80 group-hover:text-white" />
+                <div className="p-4 flex flex-col items-center justify-center h-full min-h-[160px]">
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center mb-3 transition-colors duration-200">
+                    <Plus className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
                   </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-xl sm:text-2xl font-bold text-white/90 mb-2 group-hover:text-white drop-shadow-lg line-clamp-2 leading-tight">
+                  <h3 className="text-sm font-medium text-gray-600 group-hover:text-gray-900 text-center transition-colors duration-200">
                     Create new board
                   </h3>
-                  <p className="text-white/70 text-sm sm:text-base font-medium group-hover:text-white/80 drop-shadow-md leading-relaxed">
-                    Add a new board to organize your tasks
+                  <p className="text-xs text-gray-500 text-center mt-1">
+                    Organize your tasks
                   </p>
                 </div>
-
-                {/* Footer Section - Placeholder to maintain consistent height */}
-                <div className="mt-4 pt-4 border-t border-white/10 opacity-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-white/50">
-                      <Plus className="w-4 h-4" />
-                      <span className="text-xs">New workspace</span>
-                    </div>
-                    <div className="text-xs text-white/50">
-                      Ready to start
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl pointer-events-none" />
               </div>
             </div>
           ) : (
-            <div
-              className={`max-w-4xl mx-auto transition-all duration-1000 ease-out delay-500 ${
-                mounted ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
-              }`}
-            >
-              <div className="border-2 border-dashed border-white/20 rounded-lg p-8 sm:p-16 text-center hover:border-white/30 hover:bg-white/5 group">
-                <div className="w-16 h-16 mx-auto mb-6 bg-white/10 group-hover:bg-white/15 rounded-xl flex items-center justify-center">
-                  <Plus className="w-8 h-8 text-white/60 group-hover:text-white/80" />
+            <div className="max-w-md mx-auto text-center py-12">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <LayoutGrid className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold text-white/80 mb-4 group-hover:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No boards yet
                 </h3>
-                <p className="text-white/60 mb-8 group-hover:text-white/70 max-w-md mx-auto">
+                <p className="text-gray-600 mb-6">
                   Create your first board to start organizing your tasks and projects
                 </p>
                 <Button
                   onClick={() => setShowCreateBoardModal(true)}
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 hover:border-white/40"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create your first board

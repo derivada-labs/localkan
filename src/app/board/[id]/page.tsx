@@ -30,10 +30,10 @@ interface Board {
 }
 
 const columns = [
-  { id: "backlog", title: "Backlog", color: "bg-purple-100" },
-  { id: "todo", title: "TO-DO", color: "bg-blue-100" },
-  { id: "doing", title: "Doing", color: "bg-green-100" },
-  { id: "done", title: "Done", color: "bg-gray-100" },
+  { id: "backlog", title: "Backlog", color: "#E2E8F0", headerColor: "#64748B" },
+  { id: "todo", title: "To Do", color: "#DBEAFE", headerColor: "#2563EB" },
+  { id: "doing", title: "In Progress", color: "#FBBF24", headerColor: "#F59E0B" },
+  { id: "done", title: "Done", color: "#D1FAE5", headerColor: "#059669" },
 ]
 
 export default function BoardPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,6 +49,8 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [createCardColumn, setCreateCardColumn] = useState<string>("")
   const [mounted, setMounted] = useState(false)
+  const [draggedCard, setDraggedCard] = useState<Card | null>(null)
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
 
   useEffect(() => {
     // Load board data from localStorage
@@ -145,129 +147,150 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
     )
   }
 
+  const handleDragStart = (card: Card) => {
+    setDraggedCard(card)
+  }
+
+  const handleDragOver = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault()
+    setDragOverColumn(columnId)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault()
+    if (!draggedCard) return
+
+    const updatedCards = cards.map(card =>
+      card.id === draggedCard.id
+        ? { ...card, status: columnId as any }
+        : card
+    )
+    setCards(updatedCards)
+    localStorage.setItem(`kanban-cards-${resolvedParams.id}`, JSON.stringify(updatedCards))
+    setDraggedCard(null)
+    setDragOverColumn(null)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
+    <div className="min-h-screen bg-gray-50">
       <header
-        className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-white/10 transition-all duration-800 ease-out gap-4 ${
+        className={`bg-white border-b border-gray-200 shadow-sm transition-all duration-800 ease-out ${
           mounted ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
         }`}
       >
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/")}
-            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-white/10 backdrop-blur-md"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-300 hover:-translate-x-1" />
-            <span className="hidden sm:inline">Boards</span>
-          </Button>
-        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/")}
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Back to Boards</span>
+            </Button>
+          </div>
 
-        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-center">
-          <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2 transition-all duration-300 hover:scale-105">
-            {board.title}
-            <span className="text-lg transition-transform duration-300 hover:scale-125">📋</span>
-            <span className="text-lg transition-transform duration-300 hover:rotate-12">🔧</span>
-          </h1>
-        </div>
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-center">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              {board.title}
+            </h1>
+          </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
-          >
-            <span className="hidden sm:inline">Setup</span>
-            <span className="sm:hidden">Setup</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
-          >
-            <span className="hidden sm:inline">Sync</span>
-            <span className="sm:hidden">Sync</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
-          >
-            <span className="hidden sm:inline">Filter</span>
-            <span className="sm:hidden">Filter</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowEditBoardModal(true)}
-            className="text-white/70 hover:text-white bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/40 transition-all duration-300 hover:scale-105 backdrop-blur-md"
-          >
-            <span className="hidden sm:inline">Settings</span>
-            <span className="sm:hidden">Settings</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditBoardModal(true)}
+              className="text-gray-600 hover:text-gray-900 border-gray-300 hover:bg-gray-50"
+            >
+              Board Settings
+            </Button>
+          </div>
         </div>
       </header>
 
-      <div
-        className={`p-4 sm:p-6 transition-all duration-1000 ease-out delay-200 ${
-          mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-        }`}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {columns.map((column, columnIndex) => (
-            <div
-              key={column.id}
-              className={`bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/15 transition-all duration-500 hover:shadow-xl hover:shadow-white/10 group ${
-                mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-              }`}
-              style={{ transitionDelay: `${300 + columnIndex * 100}ms` }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-white transition-all duration-300 group-hover:text-white/90">
-                  {column.title}
-                </h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setCreateCardColumn(column.id)
-                    setShowCreateCardModal(true)
-                  }}
-                  className="text-white/70 hover:text-white hover:bg-white/10 h-8 px-2 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-white/10"
-                >
-                  <Plus className="w-4 h-4 transition-transform duration-300 hover:rotate-90" />
-                  Add Card
-                </Button>
-              </div>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="flex gap-6 overflow-x-auto pb-6">
+          {columns.map((column, columnIndex) => {
+            const columnCards = cards.filter((card) => card.status === column.id)
+            const isDragOver = dragOverColumn === column.id
 
-              <div className="grid grid-cols-1 gap-3">
-                {cards
-                  .filter((card) => card.status === column.id)
-                  .map((card, cardIndex) => (
-                    <div
-                      key={card.id}
-                      className={`transition-all duration-500 ease-out ${
-                        mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-                      }`}
-                      style={{ transitionDelay: `${500 + columnIndex * 100 + cardIndex * 50}ms` }}
-                    >
-                      <KanbanCard
-                        card={card}
-                        onEdit={() => {
-                          setSelectedCard(card)
-                          setShowEditCardModal(true)
-                        }}
-                        onDelete={() => {
-                          setSelectedCard(card)
-                          setShowDeleteCardModal(true)
-                        }}
-                      />
+            return (
+              <div
+                key={column.id}
+                className={`flex-shrink-0 w-80 bg-gray-100 rounded-lg transition-all duration-200 ${
+                  isDragOver ? "bg-blue-50 ring-2 ring-blue-200" : ""
+                } ${
+                  mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+                }`}
+                style={{ transitionDelay: `${300 + columnIndex * 100}ms` }}
+                onDragOver={(e) => handleDragOver(e, column.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, column.id)}
+              >
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: column.headerColor }}
+                      ></div>
+                      <h3
+                        className="font-semibold text-sm"
+                        style={{ color: column.headerColor }}
+                      >
+                        {column.title.toUpperCase()}
+                      </h3>
+                      <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
+                        {columnCards.length}
+                      </span>
                     </div>
-                  ))}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setCreateCardColumn(column.id)
+                        setShowCreateCardModal(true)
+                      }}
+                      className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 h-8 w-8 p-0 rounded-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3 min-h-[400px]">
+                    {columnCards.map((card, cardIndex) => (
+                      <div
+                        key={card.id}
+                        className={`transition-all duration-500 ease-out ${
+                          mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                        }`}
+                        style={{ transitionDelay: `${500 + columnIndex * 100 + cardIndex * 50}ms` }}
+                      >
+                        <KanbanCard
+                          card={card}
+                          onEdit={() => {
+                            setSelectedCard(card)
+                            setShowEditCardModal(true)
+                          }}
+                          onDelete={() => {
+                            setSelectedCard(card)
+                            setShowDeleteCardModal(true)
+                          }}
+                          onDragStart={handleDragStart}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
