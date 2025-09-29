@@ -141,7 +141,7 @@ export default function KanbanDashboard() {
     setCurrentBackgroundColor(color)
   }
 
-  const handleCreateBoard = (boardData: { title: string; description: string; color: string; assignees: string[]; icon?: string; dueDate?: string }) => {
+  const handleCreateBoard = (boardData: { title: string; description: string; color: string; assignees: string[]; icon?: string }) => {
     const newBoard = {
       id: Date.now().toString(),
       title: boardData.title,
@@ -150,7 +150,6 @@ export default function KanbanDashboard() {
       assignees: boardData.assignees,
       icon: boardData.icon || "LayoutGrid",
       createdAt: new Date().toISOString(),
-      dueDate: boardData.dueDate,
     }
     const updatedBoards = [...boards, newBoard]
     setBoards(updatedBoards)
@@ -158,8 +157,15 @@ export default function KanbanDashboard() {
     setShowCreateBoardModal(false)
   }
 
-  const handleEditBoard = (boardData: { title: string; description: string; color: string; assignees: string[]; dueDate?: string }) => {
-    const updatedBoards = boards.map((board) => (board.id === selectedBoard.id ? { ...board, ...boardData } : board))
+  const handleEditBoard = (boardData: { title: string; description: string; color: string; assignees: string | string[]; icon: string }) => {
+    const normalizedAssignees = Array.isArray(boardData.assignees)
+      ? boardData.assignees
+      : boardData.assignees.split(',').map((n) => n.trim()).filter(Boolean)
+    const updatedBoards = boards.map((board) => (
+      board.id === selectedBoard.id 
+        ? { ...board, ...boardData, assignees: normalizedAssignees }
+        : board
+    ))
     setBoards(updatedBoards)
     localStorage.setItem("kanban-boards", JSON.stringify(updatedBoards))
     setShowEditBoardModal(false)
@@ -280,7 +286,7 @@ export default function KanbanDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="w-full max-w-7xl xl:max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -540,6 +546,7 @@ export default function KanbanDashboard() {
         onOpenChange={setShowWorkspaceModal}
         currentBackground={currentBackgroundColor}
         onBackgroundChange={handleBackgroundChange}
+        onWorkspaceNameChange={setWorkspaceName}
       />
 
       <CreateBoardModal

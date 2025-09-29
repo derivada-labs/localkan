@@ -12,6 +12,7 @@ interface WorkspaceSettingsModalProps {
   onOpenChange: (open: boolean) => void
   onBackgroundChange?: (color: string) => void
   currentBackground?: string
+  onWorkspaceNameChange?: (name: string) => void
 }
 
 const colorOptions = [
@@ -26,7 +27,7 @@ const colorOptions = [
   { name: "Gray", value: "gray", class: "bg-gray-500", gradient: "from-gray-600 via-gray-700 to-slate-800" },
 ]
 
-export function WorkspaceSettingsModal({ open, onOpenChange, onBackgroundChange, currentBackground }: WorkspaceSettingsModalProps) {
+export function WorkspaceSettingsModal({ open, onOpenChange, onBackgroundChange, currentBackground, onWorkspaceNameChange }: WorkspaceSettingsModalProps) {
   const [workspaceName, setWorkspaceName] = useState("My Workspace")
   const [selectedColor, setSelectedColor] = useState(currentBackground || "purple")
 
@@ -94,6 +95,9 @@ export function WorkspaceSettingsModal({ open, onOpenChange, onBackgroundChange,
     if (onBackgroundChange) {
       onBackgroundChange(selectedColor)
     }
+    if (onWorkspaceNameChange) {
+      onWorkspaceNameChange(workspaceName)
+    }
     onOpenChange(false)
   }
 
@@ -122,7 +126,7 @@ export function WorkspaceSettingsModal({ open, onOpenChange, onBackgroundChange,
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <Palette className="w-4 h-4" />
-              Background Color
+              Accent Color
             </Label>
             <div className="grid grid-cols-3 gap-3">
               {colorOptions.map((color) => (
@@ -140,9 +144,7 @@ export function WorkspaceSettingsModal({ open, onOpenChange, onBackgroundChange,
                 </button>
               ))}
             </div>
-            <p className="text-xs text-gray-500">
-              Changes the dashboard background gradient
-            </p>
+            <p className="text-xs text-gray-500">Used for highlights and brand accents.</p>
           </div>
 
           <div className="space-y-3">

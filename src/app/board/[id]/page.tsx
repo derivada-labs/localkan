@@ -111,14 +111,19 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
     setSelectedCard(null)
   }
 
-  const handleEditBoard = (boardData: { title: string; description: string; color: string; assignees: string }) => {
+  const handleEditBoard = (boardData: { title: string; description: string; color: string; assignees: string | string[]; icon: string }) => {
     if (!board) return
-    const updatedBoard = { ...board, ...boardData }
+    const updatedBoard = { 
+      ...board, 
+      ...boardData, 
+      // Keep this page's Board type (assignees as string) for local state
+      assignees: Array.isArray(boardData.assignees) ? boardData.assignees.join(", ") : boardData.assignees,
+    }
     setBoard(updatedBoard)
 
     // Update in localStorage
     const boards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
-    const updatedBoards = boards.map((b: Board) => (b.id === board.id ? updatedBoard : b))
+    const updatedBoards = boards.map((b: any) => (b.id === board.id ? { ...b, ...boardData } : b))
     localStorage.setItem("kanban-boards", JSON.stringify(updatedBoards))
     setShowEditBoardModal(false)
   }
@@ -176,7 +181,7 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-white">
       <header
         className={`bg-white border-b border-gray-200 shadow-sm transition-all duration-800 ease-out ${
           mounted ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
@@ -214,8 +219,11 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
         </div>
       </header>
 
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="flex gap-6 overflow-x-auto pb-6">
+      <div className="p-6 bg-white min-h-screen">
+        {/* Scroll container */}
+        <div className="w-full overflow-x-auto pb-6">
+          {/* Inner content: min-w-max ensures width equals content so mx-auto can center when not overflowing */}
+          <div className="flex gap-6 justify-center min-w-max mx-auto">
           {columns.map((column, columnIndex) => {
             const columnCards = cards.filter((card) => card.status === column.id)
             const isDragOver = dragOverColumn === column.id
@@ -291,6 +299,7 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
               </div>
             )
           })}
+          </div>
         </div>
       </div>
 

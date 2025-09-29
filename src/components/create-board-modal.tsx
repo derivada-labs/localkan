@@ -24,7 +24,7 @@ import {
 interface CreateBoardModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string[]; icon?: string; dueDate?: string }) => void
+  onCreateBoard: (boardData: { title: string; description: string; color: string; assignees: string[]; icon?: string }) => void
 }
 
 const colorOptions = [
@@ -58,7 +58,6 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
   const [boardTitle, setBoardTitle] = useState("")
   const [description, setDescription] = useState("")
   const [assigneesInput, setAssigneesInput] = useState("")
-  const [dueDate, setDueDate] = useState("")
   const [selectedColor, setSelectedColor] = useState("purple")
   const [selectedIcon, setSelectedIcon] = useState("LayoutGrid")
 
@@ -77,14 +76,12 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
       color: selectedColor,
       assignees: assigneesArray,
       icon: selectedIcon,
-      dueDate: dueDate || undefined,
     })
 
     // Reset form
     setBoardTitle("")
     setDescription("")
     setAssigneesInput("")
-    setDueDate("")
     setSelectedColor("purple")
     setSelectedIcon("LayoutGrid")
   }
@@ -96,7 +93,7 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
           <DialogTitle>Create New Board</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="board-title">
               Board Title <span className="text-red-500">*</span>
@@ -132,16 +129,6 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
             <p className="text-xs text-gray-500">
               Add multiple assignees separated by commas.
             </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="due-date">Due Date (Optional)</Label>
-            <Input
-              id="due-date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
           </div>
 
           <div className="space-y-3">
@@ -189,7 +176,7 @@ export function CreateBoardModal({ open, onOpenChange, onCreateBoard }: CreateBo
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

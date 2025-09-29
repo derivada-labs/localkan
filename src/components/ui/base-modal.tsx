@@ -78,13 +78,15 @@ export function BaseModal({
         className={cn(
           MODAL_SIZES[size],
           modalConfig.contentClass,
+          // Ensure consistent white surface and border
+          "bg-white border border-gray-200 sm:rounded-xl",
           className
         )}
         showCloseButton={showCloseButton}
       >
         <DialogHeader>
           <DialogTitle className={cn(
-            "flex items-center gap-2",
+            "flex items-center gap-2 text-gray-900",
             modalConfig.titleClass
           )}>
             {modalConfig.titleIcon && (
@@ -94,12 +96,12 @@ export function BaseModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {children}
         </div>
 
         {footer && (
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             {footer}
           </div>
         )}
