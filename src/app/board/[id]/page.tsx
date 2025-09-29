@@ -57,7 +57,13 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
     const boards = JSON.parse(localStorage.getItem("kanban-boards") || "[]")
     const currentBoard = boards.find((b: Board) => b.id === resolvedParams.id)
     if (currentBoard) {
-      setBoard(currentBoard)
+      const normalizedBoard = {
+        ...currentBoard,
+        assignees: Array.isArray(currentBoard.assignees)
+          ? currentBoard.assignees.join(", ")
+          : currentBoard.assignees || "",
+      } as Board
+      setBoard(normalizedBoard)
     }
 
     // Load cards data from localStorage

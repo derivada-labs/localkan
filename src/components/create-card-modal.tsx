@@ -29,10 +29,19 @@ export function CreateCardModal({ open, onOpenChange, onCreateCard, defaultAssig
   const handleSubmit = () => {
     if (!cardTitle.trim()) return
 
+    const defaultFirstAssignee = (() => {
+      try {
+        const s = (defaultAssignees ?? "").toString()
+        return s.split(",")[0]?.trim() || ""
+      } catch {
+        return ""
+      }
+    })()
+
     onCreateCard({
       title: cardTitle,
       description,
-      assignee: assignee || defaultAssignees.split(",")[0]?.trim() || "",
+      assignee: assignee || defaultFirstAssignee,
       priority,
     })
 

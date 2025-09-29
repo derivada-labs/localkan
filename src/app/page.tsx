@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SyncIdModal } from "@/components/sync-id-modal"
 import { SyncSuccessModal } from "@/components/sync-success-modal"
+import { CreateSyncIdModal } from "@/components/create-sync-id-modal"
 import { WorkspaceSettingsModal } from "@/components/workspace-settings-modal"
 import { CreateBoardModal } from "@/components/create-board-modal"
 import { EditBoardModal } from "@/components/edit-board-modal"
@@ -59,6 +60,7 @@ const getIconComponent = (iconName: string) => {
 export default function KanbanDashboard() {
   const router = useRouter()
   const [showSyncModal, setShowSyncModal] = useState(false)
+  const [showCreateSyncModal, setShowCreateSyncModal] = useState(false)
   const [showSyncSuccessModal, setShowSyncSuccessModal] = useState(false)
   const [syncSuccessData, setSyncSuccessData] = useState({ syncId: "", boardCount: 0 })
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false)
@@ -305,6 +307,16 @@ export default function KanbanDashboard() {
               <Cloud className="w-4 h-4 mr-2" />
               {isCloudSynced ? "Sync" : "Setup Sync"}
             </Button>
+            {!isCloudSynced && (
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setShowCreateSyncModal(true)}
+              >
+                <Cloud className="w-4 h-4 mr-2" /> Create Sync ID
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -532,6 +544,16 @@ export default function KanbanDashboard() {
         open={showSyncModal}
         onOpenChange={setShowSyncModal}
         onSyncSetup={handleSyncSetup}
+      />
+
+      <CreateSyncIdModal
+        open={showCreateSyncModal}
+        onOpenChange={setShowCreateSyncModal}
+        onCreated={(id, count) => {
+          setIsCloudSynced(true)
+          setSyncSuccessData({ syncId: id, boardCount: count })
+          setShowSyncSuccessModal(true)
+        }}
       />
 
       <SyncSuccessModal
